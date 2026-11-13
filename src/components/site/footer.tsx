@@ -8,6 +8,15 @@ import { LogoSlot, Tagline, Wordmark } from "./logo";
 
 const GROUPS: CategoryId[] = ["pdf", "image", "calc", "prod"];
 
+/* v0.3: legal pages are real pages — required for ad-network approval
+   and plain good practice for a public site */
+const PAGES = [
+  { href: "/about", label: "About" },
+  { href: "/privacy-policy", label: "Privacy Policy" },
+  { href: "/terms", label: "Terms" },
+  { href: "/disclaimer", label: "Disclaimer" },
+];
+
 export function SiteFooter() {
   /* v0.2: ready tools link to their own pages */
   const comingSoon = (name: string) =>
@@ -15,17 +24,12 @@ export function SiteFooter() {
       description: "It ships with the next development batch.",
     });
 
-  const soonPage = (label: string) =>
-    toast(`${label} ships with the full launch`, {
-      description: "You are looking at the early working build.",
-    });
-
   return (
     <footer className="mt-auto bg-[#173B70] text-white dark:bg-[#0A1220]">
       <div className="mx-auto grid w-full max-w-[1120px] grid-cols-1 gap-9 px-4 py-11 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <div className="mb-3.5">
-            <LogoSlot size={40} className="border-white/35" />
+            <LogoSlot size={40} />
           </div>
           <Wordmark className="text-white" />
           <div className="mt-1.5">
@@ -76,15 +80,14 @@ export function SiteFooter() {
           <span className="opacity-40">·</span>
           <span>Every tool free, every file yours</span>
           <span className="ml-auto hidden gap-3 sm:flex">
-            {["About", "Privacy Policy", "Terms", "Disclaimer"].map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => soonPage(p)}
+            {PAGES.map((p) => (
+              <Link
+                key={p.href}
+                href={p.href}
                 className="rounded px-0 transition-colors hover:text-white"
               >
-                {p}
-              </button>
+                {p.label}
+              </Link>
             ))}
           </span>
         </div>

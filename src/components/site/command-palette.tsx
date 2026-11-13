@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import {
   Command,
   CommandEmpty,
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { searchTools } from "@/lib/search";
 import { CATEGORY_LABEL, READY_TOOLS } from "@/lib/tools";
+import { CONTACT_EMAIL } from "@/lib/site";
 import { useToolStore } from "@/lib/tool-store";
 import { ToolIcon } from "./tool-icon";
 
@@ -70,19 +70,16 @@ export function CommandPalette() {
             {items.length === 0 ? (
               <CommandEmpty>
                 <p>No tool for “{query.trim()}” yet.</p>
-                <button
-                  type="button"
+                {/* v0.3: real request path — a mailto, zero infrastructure */}
+                <a
+                  href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+                    `FreeSeak tool request: ${query.trim()}`,
+                  )}`}
                   className="mt-1 block w-full font-semibold text-primary hover:underline"
-                  onClick={() => {
-                    setPalette(false);
-                    toast("Noted — requests shape the roadmap", {
-                      description:
-                        "The request-a-tool form ships with the full launch.",
-                    });
-                  }}
+                  onClick={() => setPalette(false)}
                 >
-                  Request a tool →
-                </button>
+                  Request this tool →
+                </a>
               </CommandEmpty>
             ) : (
               <CommandGroup

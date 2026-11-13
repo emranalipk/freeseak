@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/accordion";
 import { ToolIcon } from "@/components/site/tool-icon";
 import { CATEGORY_LABEL, READY_TOOLS, type ToolDef } from "@/lib/tools";
+import { SITE_URL } from "@/lib/site";
 import { recordVisit } from "@/lib/tool-store";
 import { TOOL_COMPONENTS } from "./tool-registry";
 
@@ -38,8 +39,8 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
     ),
   ].slice(0, 3);
 
-  /* structured data for Google: the FAQ content already lives in the
-     catalogue — we just expose it in the format search engines expect */
+  /* structured data for Google (v0.3: FAQ + WebApplication + Breadcrumb):
+     all of it is generated from the catalogue — the single source of truth */
   const faqJsonLd =
     tool.faq && tool.faq.length > 0
       ? {
@@ -52,6 +53,33 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
           })),
         }
       : null;
+
+  const webAppJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: `${tool.name} — FreeSeak`,
+    url: `${SITE_URL}/tools/${tool.id}`,
+    applicationCategory: "UtilityApplication",
+    operatingSystem: "Any (runs in the browser)",
+    description: tool.short,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    browserRequirements: "Requires JavaScript",
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: tool.name,
+        item: `${SITE_URL}/tools/${tool.id}`,
+      },
+    ],
+  };
 
   return (
     <div className="mx-auto w-full max-w-[880px] px-4 py-6 sm:px-6 sm:py-8">
@@ -190,11 +218,14 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
         </Link>
       </div>
 
-      {faqJsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-        />
+      {[faqJsonLd, webAppJsonLd, breadcrumbJsonLd].map((ld, i) =>
+        ld ? (
+          <script
+            key={i}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
+          />
+        ) : null,
       )}
     </div>
   );

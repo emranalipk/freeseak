@@ -6,10 +6,10 @@ import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LogoSlot, Tagline, Wordmark } from "./logo";
 
-/* v0.2: nav now uses real routes so it works from tool pages too —
-   "Tools" goes home and scrolls to the grid */
+/* v0.3: "Tools" is a real index page (/tools) — crawlable and useful
+   from every page. On phones the nav collapses to logo + Tools + theme. */
 const NAV = [
-  { href: "/#tools", label: "Tools" },
+  { href: "/tools", label: "Tools" },
   { href: "/#why", label: "Why FreeSeak" },
   { href: "/#faq", label: "FAQ" },
 ];
@@ -33,6 +33,13 @@ export function SiteHeader() {
         </Link>
 
         <nav className="ml-auto flex items-center gap-1" aria-label="Main">
+          {/* always-visible Tools link — the only nav a phone needs */}
+          <Link
+            href="/tools"
+            className="rounded-lg px-3 py-2 text-[13.5px] font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:hidden"
+          >
+            Tools
+          </Link>
           {NAV.map((n) => (
             <Link
               key={n.href}

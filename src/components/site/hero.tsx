@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { searchTools } from "@/lib/search";
 import { CATEGORY_LABEL, READY_TOOLS, TOOLS, type ToolDef } from "@/lib/tools";
+import { CONTACT_EMAIL } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 
 const QUICK = ["Compress PDF", "QR Code", "Word Counter", "Percentage", "Age"];
@@ -207,19 +208,16 @@ export function Hero() {
               )}
               <div className="border-t border-border bg-muted/40 px-4 py-2.5 text-[12px] text-muted-foreground">
                 Can’t find it?{" "}
-                <button
-                  type="button"
+                {/* v0.3: real request path — a mailto, zero infrastructure */}
+                <a
+                  href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+                    "FreeSeak tool request",
+                  )}`}
                   className="font-semibold text-primary hover:underline"
-                  onClick={() => {
-                    setOpen(false);
-                    toast("Noted — requests shape the roadmap", {
-                      description:
-                        "The request-a-tool form ships with the full launch.",
-                    });
-                  }}
+                  onClick={() => setOpen(false)}
                 >
                   Request a tool
-                </button>
+                </a>
               </div>
             </div>
           )}

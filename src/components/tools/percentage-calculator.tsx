@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 function fmt(n: number): string {
   if (!Number.isFinite(n)) return "—";
@@ -38,7 +37,7 @@ export function PercentageCalculator() {
   return (
     <div className="flex flex-col gap-4">
       {/* card 1 */}
-      <div className="rounded-2xl border border-border bg-card p-4.5 p-4">
+      <div className="rounded-2xl border border-border bg-card p-4">
         <p className="font-display text-[13.5px] font-bold text-foreground">
           What is X% of Y?
         </p>

@@ -8,11 +8,12 @@ import { CATEGORIES, TOOLS, type CategoryId } from "@/lib/tools";
 import { ToolIcon } from "./tool-icon";
 
 /* v0.2: ready cards are real links to the tool's own page;
-   coming-soon cards stay buttons with a friendly toast. */
+   coming-soon cards stay buttons with a friendly toast.
+   v0.3: hideHeading — the /tools index page carries its own h1. */
 const CARD_CLASS =
   "group flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-navy hover:shadow-md dark:hover:border-[#3E5C96] sm:p-4.5";
 
-export function ToolGrid() {
+export function ToolGrid({ hideHeading = false }: { hideHeading?: boolean }) {
   const [cat, setCat] = useState<CategoryId | "all">("all");
 
   const visible = TOOLS.filter((t) => cat === "all" || t.category === cat);
@@ -23,14 +24,16 @@ export function ToolGrid() {
   return (
     <section id="tools" className="scroll-mt-20 px-4 py-8 sm:px-6">
       <div className="mx-auto w-full max-w-[1120px]">
-        <div className="mb-4 flex flex-wrap items-end gap-3.5">
-          <h2 className="font-display text-[21px] font-extrabold tracking-tight text-navy dark:text-[#CFE0FB]">
-            All tools
-          </h2>
-          <span className="pb-0.5 text-[12.5px] font-semibold text-muted-foreground">
-            {TOOLS.length} tools · all free
-          </span>
-        </div>
+        {!hideHeading && (
+          <div className="mb-4 flex flex-wrap items-end gap-3.5">
+            <h2 className="font-display text-[21px] font-extrabold tracking-tight text-navy dark:text-[#CFE0FB]">
+              All free tools
+            </h2>
+            <span className="pb-0.5 text-[12.5px] font-semibold text-muted-foreground">
+              {TOOLS.length} tools · all free
+            </span>
+          </div>
+        )}
 
         <div className="mb-4.5 flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (

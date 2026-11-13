@@ -45,21 +45,14 @@ export function recordVisit(id: string) {
   if (getTool(id)?.ready) pushRecent(id);
 }
 
+/* v0.3: the v0.1 popup-overlay state (openId / openTool / closeTool) was
+   removed — tools are real pages now. The store is palette-only. */
 interface ToolStore {
-  openId: string | null;
   paletteOpen: boolean;
-  openTool: (id: string) => void;
-  closeTool: () => void;
-  setPalette: (open: boolean) => void;
+  setPalette: (_open: boolean) => void;
 }
 
 export const useToolStore = create<ToolStore>((set) => ({
-  openId: null,
   paletteOpen: false,
-  openTool: (id) => {
-    pushRecent(id);
-    set({ openId: id, paletteOpen: false });
-  },
-  closeTool: () => set({ openId: null }),
   setPalette: (paletteOpen) => set({ paletteOpen }),
 }));

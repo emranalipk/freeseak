@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://freespeak.emranali3813.workers.dev/sitemap.xml
+Sitemap: https://freeseak.com/sitemap.xml

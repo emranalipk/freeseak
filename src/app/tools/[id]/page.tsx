@@ -18,6 +18,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   const tool = getTool(id);
   if (!tool) return {};
+  /* v0.3 SEO: title leads with the tool name (the primary keyword),
+     description comes from the catalogue, every tool shares its own
+     social preview image. */
   return {
     title: `${tool.name} — Free, No Sign-Up`,
     description: tool.short,
@@ -27,6 +30,20 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       description: tool.short,
       url: `/tools/${tool.id}`,
       type: "website",
+      images: [
+        {
+          url: `/og/${tool.id}.png`,
+          width: 1200,
+          height: 630,
+          alt: `${tool.name} — free on FreeSeak`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${tool.name} — FreeSeak`,
+      description: tool.short,
+      images: [`/og/${tool.id}.png`],
     },
   };
 }
