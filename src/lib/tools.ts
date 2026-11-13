@@ -243,22 +243,76 @@ export const TOOLS: ToolDef[] = [
   {
     id: "compress-image",
     name: "Compress Image",
-    short: "Reduce JPG, PNG and WebP file size instantly — without uploading.",
+    short:
+      "Compress JPG, PNG and WebP images free — pick a quality or an exact target size like 100 KB. No sign-up, nothing uploaded.",
     category: "image",
     icon: "image-down",
     keywords:
-      "compress image reduce image file size shrink photo compress jpg png webp image compressor online free make image smaller for email",
-    ready: false,
+      "compress image compress jpg compress png compress webp reduce image file size make image smaller shrink photo image compressor online free compress image to 100kb compress image without losing quality photo compressor for email reduce image size for website upload image too big compress without uploading no sign up",
+    ready: true,
+    intro:
+      "Shrink JPG, PNG and WebP files to the size you actually need. Pick a quality level, set an exact target such as 100 KB and let the compressor find the highest quality that fits, or start from a preset — web & email, high quality, smallest file. You can also cap the longest edge, which is handy for photos from modern phones. Everything runs in your browser: your images are never uploaded to a server, which is also why there are no file-size limits, no queues and no account.",
+    howTo: [
+      "Drop your images onto the page, click to browse, or paste them from the clipboard.",
+      "Choose how much to compress: a quality slider, an exact target size (for example 100 KB), or a preset.",
+      "Optionally cap the longest edge or change the output format, then press Compress.",
+      "Check the before → after sizes and download your images — one by one or all at once.",
+    ],
+    faq: [
+      {
+        q: "How do I compress an image to 100 KB?",
+        a: "Switch to Target size, type 100 (or tap the 100 KB chip) and press Compress. The tool tests quality levels automatically and returns the highest quality that fits under 100 KB. If 100 KB is genuinely impossible for an image, you get the closest possible file with an honest note — never an error.",
+      },
+      {
+        q: "Will compressing reduce the quality of my image?",
+        a: "JPG and WebP compression discards some detail — at quality 70–90 the difference is usually invisible. PNG is lossless, so it keeps every pixel but shrinks far less; pair it with a size cap for real savings. The quality slider lets you make that trade-off yourself.",
+      },
+      {
+        q: "Are my images uploaded to a server?",
+        a: "No. Decoding, resizing and re-encoding all happen inside your browser — the files never leave your device. Close the tab and everything is gone.",
+      },
+      {
+        q: "Why didn't my PNG get smaller?",
+        a: "PNG is a lossless format: re-encoding it alone barely changes the size. Set “Resize large images” to cap the longest edge (1920 px, for example), or save as JPG / WebP — those formats compress photos much more effectively.",
+      },
+    ],
   },
   {
     id: "resize-image",
     name: "Resize Image",
-    short: "Resize images to any dimensions and convert formats — in your browser.",
+    short:
+      "Resize images to exact dimensions, a percentage, or social media sizes like Instagram — and convert JPG, PNG, WebP. Free, private.",
     category: "image",
     icon: "scaling",
     keywords:
-      "resize image change image size photo resizer image dimensions resize png jpg webp crop and resize passport photo size",
-    ready: false,
+      "resize image image resizer change image size resize photo resize png resize jpg resize image online free resize for instagram resize image to 1080x1080 social media image sizes youtube thumbnail size resize without losing quality image dimension converter scale image crop to size resize and convert format webp no sign up",
+    ready: true,
+    intro:
+      "Make any image the exact size you need — no design app required. Scale by percentage, set just the width or height (the other side follows automatically), demand exact dimensions with a centred crop, fit inside a box, or tap a one-click preset for Instagram, YouTube thumbnails, Facebook, X, LinkedIn, Pinterest, Full HD and 4K. Convert between JPG, PNG and WebP in the same step, and decide for yourself whether smaller images may be enlarged. As with every FreeSeak tool, the resizing happens entirely in your browser — nothing is uploaded.",
+    howTo: [
+      "Drop your images in, browse, or paste them from the clipboard.",
+      "Pick a resize mode — percentage, one side, exact size, fit inside, or a social preset.",
+      "Optionally convert the format, adjust quality, and set a background colour for transparent areas when saving as JPG.",
+      "Press Resize, check the new dimensions, and download — individually or all at once.",
+    ],
+    faq: [
+      {
+        q: "How do I resize an image for Instagram or a YouTube thumbnail?",
+        a: "Choose the Presets mode and tap the size you need — Instagram post (1080 × 1080), Story (1080 × 1920), YouTube thumbnail (1280 × 720) and more. Your image is scaled and centre-cropped to exactly that size, so nothing is distorted.",
+      },
+      {
+        q: "How do I resize without distorting the picture?",
+        a: "Every mode except “Stretch to fill” keeps the original proportions. With exact sizes, the default “Keep aspect ratio” setting trims a little from the edges instead of stretching — the same approach social networks use themselves.",
+      },
+      {
+        q: "Can I make an image bigger?",
+        a: "Yes — by default smaller images are kept at their original size instead of being blurred by upscaling. Tick “Allow enlarging” if you genuinely need a larger canvas; some softness in the result is normal.",
+      },
+      {
+        q: "Is my image uploaded anywhere?",
+        a: "No. Resizing runs 100% in your browser — the file never leaves your device, and there is no size limit and no sign-up.",
+      },
+    ],
   },
   {
     id: "invoice-generator",

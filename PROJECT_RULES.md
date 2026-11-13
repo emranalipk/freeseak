@@ -82,7 +82,7 @@ stated on every page — it must stay literally true.
 ## Rule 6 — Version and changelog
 
 Every update bumps `version` in `package.json` and adds a line to the
-changelog table in `README.md`.
+changelog table in `CHANGELOG.md`.
 
 ---
 

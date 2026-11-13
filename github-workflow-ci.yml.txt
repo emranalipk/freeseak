@@ -1,0 +1,49 @@
+HOW TO ENABLE CI (one-time, ~2 minutes)
+========================================
+
+GitHub's upload dialog cannot create the hidden `.github/workflows/` folder,
+so this helper file carries the workflow instead. Do this ONCE:
+
+1. In the GitHub repository: "Add file" → "Create new file".
+2. Type the file path exactly:  .github/workflows/ci.yml
+   (typing the slashes creates the folders automatically)
+3. Delete the "HOW TO ENABLE CI" comment block below, copy the rest of this
+   file, and paste it into the new file.
+4. Click "Commit changes".
+5. Delete this helper file from the repository (open it → trash icon →
+   commit), so no dead files remain (PROJECT_RULES.md rule 1).
+
+What you get: every push is linted and built automatically. A red ✗ means
+dead code or a broken build — fix the code, never weaken the rules.
+
+Paste everything below this line:
+
+---------------------------------------------------------------------------
+
+# FreeSeak CI — the Rule-1 gate: lint (dead code = error) + production build.
+# Runs on every push and pull request. A red X here means the update
+# cannot ship: fix the code, do not weaken the rules.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint (dead code fails the build — PROJECT_RULES.md rule 1)
+        run: npm run lint
+
+      - name: Build (static export into ./out)
+        run: npm run build
