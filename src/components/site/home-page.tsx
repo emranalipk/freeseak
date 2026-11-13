@@ -1,31 +1,27 @@
 "use client";
 
-import { SiteHeader } from "./header";
 import { Hero } from "./hero";
 import { RecentTools } from "./recent-tools";
 import { ToolGrid } from "./tool-grid";
 import { AdSlot } from "./ad-slot";
 import { WhyFreeseak } from "./why-freeseak";
 import { Faq } from "./faq";
-import { SiteFooter } from "./footer";
-import { CommandPalette } from "./command-palette";
-import { ToolOverlay } from "@/components/tools/tool-overlay";
 
+/**
+ * v0.2: the homepage is now content-only — the header, footer and
+ * command palette live in the root layout so tool pages share them.
+ * Clicking a tool card now navigates to that tool's own page
+ * (/tools/<id>) instead of opening the old popup.
+ */
 export function HomePage() {
   return (
-    <div id="top" className="flex min-h-screen flex-col">
-      <SiteHeader />
-      <main className="flex-1">
-        <Hero />
-        <RecentTools />
-        <ToolGrid />
-        <AdSlot />
-        <WhyFreeseak />
-        <Faq />
-      </main>
-      <SiteFooter />
-      <CommandPalette />
-      <ToolOverlay />
-    </div>
+    <>
+      <Hero />
+      <RecentTools />
+      <ToolGrid />
+      <AdSlot />
+      <WhyFreeseak />
+      <Faq />
+    </>
   );
 }

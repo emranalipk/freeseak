@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { searchTools } from "@/lib/search";
 import { CATEGORY_LABEL, READY_TOOLS, TOOLS, type ToolDef } from "@/lib/tools";
-import { useToolStore } from "@/lib/tool-store";
 import { Button } from "@/components/ui/button";
 
 const QUICK = ["Compress PDF", "QR Code", "Word Counter", "Percentage", "Age"];
@@ -13,7 +13,7 @@ const QUICK = ["Compress PDF", "QR Code", "Word Counter", "Percentage", "Age"];
 const TRUST = ["100% free", "No account", "Files never uploaded"];
 
 export function Hero() {
-  const openTool = useToolStore((s) => s.openTool);
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
@@ -56,7 +56,7 @@ export function Hero() {
     setOpen(false);
     setQuery("");
     if (tool.ready) {
-      openTool(tool.id);
+      router.push(`/tools/${tool.id}`);
     } else {
       toast(`${tool.name} is in the build queue`, {
         description: "It ships with the next development batch.",

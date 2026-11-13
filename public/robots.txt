@@ -1,0 +1,5 @@
+# FreeSeak — invite search engines in, show them the map
+User-agent: *
+Allow: /
+
+Sitemap: https://freespeak.emranali3813.workers.dev/sitemap.xml

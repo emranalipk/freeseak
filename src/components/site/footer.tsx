@@ -1,27 +1,19 @@
 "use client";
 
 import { toast } from "sonner";
+import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { CATEGORY_LABEL, TOOLS, type CategoryId } from "@/lib/tools";
-import { useToolStore } from "@/lib/tool-store";
 import { LogoSlot, Tagline, Wordmark } from "./logo";
 
 const GROUPS: CategoryId[] = ["pdf", "image", "calc", "prod"];
 
 export function SiteFooter() {
-  const openTool = useToolStore((s) => s.openTool);
-
-  const openOrSoon = (id: string) => {
-    const tool = TOOLS.find((t) => t.id === id);
-    if (!tool) return;
-    if (tool.ready) {
-      openTool(id);
-    } else {
-      toast(`${tool.name} is in the build queue`, {
-        description: "It ships with the next development batch.",
-      });
-    }
-  };
+  /* v0.2: ready tools link to their own pages */
+  const comingSoon = (name: string) =>
+    toast(`${name} is in the build queue`, {
+      description: "It ships with the next development batch.",
+    });
 
   const soonPage = (label: string) =>
     toast(`${label} ships with the full launch`, {
@@ -53,13 +45,22 @@ export function SiteFooter() {
             <ul className="space-y-0.5">
               {TOOLS.filter((t) => t.category === cat).map((t) => (
                 <li key={t.id}>
-                  <button
-                    type="button"
-                    onClick={() => openOrSoon(t.id)}
-                    className="rounded px-0 py-1 text-[13px] text-white/80 transition-colors hover:text-white"
-                  >
-                    {t.name}
-                  </button>
+                  {t.ready ? (
+                    <Link
+                      href={`/tools/${t.id}`}
+                      className="rounded px-0 py-1 text-[13px] text-white/80 transition-colors hover:text-white"
+                    >
+                      {t.name}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => comingSoon(t.name)}
+                      className="rounded px-0 py-1 text-[13px] text-white/80 transition-colors hover:text-white"
+                    >
+                      {t.name}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

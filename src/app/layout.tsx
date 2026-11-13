@@ -3,6 +3,10 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import { SiteHeader } from "@/components/site/header";
+import { SiteFooter } from "@/components/site/footer";
+import { CommandPalette } from "@/components/site/command-palette";
+import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -17,7 +21,12 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "FreeSeak — Free Online Tools for PDF, Images & Everyday Tasks",
+  /* v0.2: one place for the public address — see src/lib/site.ts */
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "FreeSeak — Free Online Tools for PDF, Images & Everyday Tasks",
+    template: "%s | FreeSeak",
+  },
   description:
     "Smart, free tools that finish the job in your browser. No sign-up, no uploads — your files never leave your device. Seek & Done.",
   keywords: [
@@ -37,6 +46,7 @@ export const metadata: Metadata = {
       "Smart, free tools that finish the job in your browser. No sign-up, no uploads.",
     siteName: "FreeSeak",
     type: "website",
+    url: SITE_URL,
   },
 };
 
@@ -60,7 +70,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          {/* v0.2: header, footer and the Ctrl+K palette moved here so
+              they wrap EVERY page — tool pages included */}
+          <div id="top" className="flex min-h-screen flex-col">
+            <SiteHeader />
+            <main className="flex-1">{children}</main>
+            <SiteFooter />
+          </div>
+          <CommandPalette />
           <Toaster position="bottom-center" />
         </ThemeProvider>
       </body>

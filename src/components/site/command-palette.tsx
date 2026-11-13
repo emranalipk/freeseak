@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Command,
@@ -24,7 +25,7 @@ import { ToolIcon } from "./tool-icon";
 export function CommandPalette() {
   const paletteOpen = useToolStore((s) => s.paletteOpen);
   const setPalette = useToolStore((s) => s.setPalette);
-  const openTool = useToolStore((s) => s.openTool);
+  const router = useRouter();
   const [query, setQuery] = useState("");
 
   const { results, close } = searchTools(query.trim());
@@ -45,7 +46,7 @@ export function CommandPalette() {
   const choose = (id: string) => {
     setQuery("");
     setPalette(false);
-    openTool(id);
+    router.push(`/tools/${id}`);
   };
 
   return (

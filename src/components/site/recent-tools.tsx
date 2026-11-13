@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { History } from "lucide-react";
+import Link from "next/link";
 import { getRecent } from "@/lib/tool-store";
 import { getTool } from "@/lib/tools";
-import { useToolStore } from "@/lib/tool-store";
 import { ToolIcon } from "./tool-icon";
 
+/* v0.2: chips are links to the tool's own page */
 export function RecentTools() {
-  const openTool = useToolStore((s) => s.openTool);
   const [ids, setIds] = useState<string[] | null>(null);
 
   useEffect(() => {
@@ -43,15 +43,14 @@ export function RecentTools() {
         </p>
         <div className="flex flex-wrap gap-2">
           {tools.map((t) => (
-            <button
+            <Link
               key={t.id}
-              type="button"
-              onClick={() => openTool(t.id)}
+              href={`/tools/${t.id}`}
               className="inline-flex items-center gap-2 rounded-full border border-mint/40 bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground transition hover:-translate-y-px hover:border-mint"
             >
               <ToolIcon icon={t.icon} className="size-4 text-mint-deep dark:text-mint" />
               {t.name}
-            </button>
+            </Link>
           ))}
         </div>
       </div>

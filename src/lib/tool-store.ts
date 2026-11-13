@@ -40,6 +40,11 @@ function pushRecent(id: string) {
   writeRecent(ids.slice(0, RECENT_MAX));
 }
 
+/** v0.2: tool PAGES call this so the recent-tools chips stay accurate */
+export function recordVisit(id: string) {
+  if (getTool(id)?.ready) pushRecent(id);
+}
+
 interface ToolStore {
   openId: string | null;
   paletteOpen: boolean;
