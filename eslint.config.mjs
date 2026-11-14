@@ -61,6 +61,9 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     // node_modules, not our code (same treatment as node_modules).
     "public/pdf.worker.min.mjs",
     "public/pdf.renderer.min.mjs",
+    // v0.6: vendored enhance worker — a static asset written as plain
+    // browser JS, not module code (same treatment as the pdf.js workers).
+    "public/enhance-worker.js",
   ]
 }];
 
