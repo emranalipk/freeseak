@@ -1,15 +1,26 @@
 import {
   Cake,
+  FileArchive,
+  FileImage,
   ImageDown,
+  Images,
+  LayoutGrid,
+  ListOrdered,
+  Merge,
   Percent,
   QrCode,
   Scaling,
+  ScanText,
+  Split,
+  Stamp,
+  Tags,
   Type,
   type LucideIcon,
 } from "lucide-react";
 
 /* v0.4: icon keys for the 6 live tools — entries for planned tools
-   were removed with their catalogue entries (Rule 1). */
+   were removed with their catalogue entries (Rule 1).
+   v0.5: + the 10 PDF tools. */
 const TOOL_ICONS: Record<string, LucideIcon> = {
   "image-down": ImageDown,
   scaling: Scaling,
@@ -17,6 +28,16 @@ const TOOL_ICONS: Record<string, LucideIcon> = {
   type: Type,
   percent: Percent,
   cake: Cake,
+  merge: Merge,
+  split: Split,
+  "file-image": FileImage,
+  images: Images,
+  layout: LayoutGrid,
+  ordered: ListOrdered,
+  stamp: Stamp,
+  scan: ScanText,
+  tags: Tags,
+  archive: FileArchive,
 };
 
 export function ToolIcon({

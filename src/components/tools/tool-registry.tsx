@@ -7,6 +7,16 @@ import { PercentageCalculator } from "./percentage-calculator";
 import { AgeCalculator } from "./age-calculator";
 import { ImageCompressor } from "./image-compressor";
 import { ImageResizer } from "./image-resizer";
+import { MergePdf } from "./merge-pdf";
+import { SplitPdf } from "./split-pdf";
+import { ImagesToPdf } from "./images-to-pdf";
+import { PdfToImages } from "./pdf-to-images";
+import { OrganizePages } from "./organize-pages";
+import { AddPageNumbers } from "./add-page-numbers";
+import { WatermarkPdf } from "./watermark-pdf";
+import { ExtractPdfText } from "./extract-pdf-text";
+import { EditPdfMetadata } from "./edit-pdf-metadata";
+import { CompressPdf } from "./compress-pdf";
 
 /**
  * The tool registry: one line per working tool.
@@ -19,4 +29,14 @@ export const TOOL_COMPONENTS: Record<string, ComponentType> = {
   "age-calculator": AgeCalculator,
   "compress-image": ImageCompressor,
   "resize-image": ImageResizer,
+  "merge-pdf": MergePdf,
+  "split-pdf": SplitPdf,
+  "images-to-pdf": ImagesToPdf,
+  "pdf-to-images": PdfToImages,
+  "organize-pdf-pages": OrganizePages,
+  "add-page-numbers": AddPageNumbers,
+  "watermark-pdf": WatermarkPdf,
+  "extract-pdf-text": ExtractPdfText,
+  "edit-pdf-metadata": EditPdfMetadata,
+  "compress-pdf": CompressPdf,
 };

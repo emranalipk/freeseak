@@ -7,11 +7,12 @@ import { OPERATOR_EXPERIENCE, OPERATOR_NAME } from "@/lib/site";
 import { SITE_VERSION } from "@/lib/version";
 import { LogoSlot, Tagline, Wordmark } from "./logo";
 
-const GROUPS: CategoryId[] = ["image", "calc", "prod"];
+const GROUPS: CategoryId[] = ["pdf", "image", "calc", "prod"];
 
 /* v0.3: legal pages are real pages — required for ad-network approval
    and plain good practice for a public site.
-   v0.4: + Guides link; the PDF column is gone with the PDF tools (Rule 1). */
+   v0.4: + Guides link; the PDF column was gone with the PDF tools (Rule 1).
+   v0.5: the PDF column is back — ten real tools. */
 const PAGES = [
   { href: "/about", label: "About" },
   { href: "/guides", label: "Guides" },
@@ -23,7 +24,7 @@ const PAGES = [
 export function SiteFooter() {
   return (
     <footer className="mt-auto bg-[#173B70] text-white dark:bg-[#0A1220]">
-      <div className="mx-auto grid w-full max-w-[1120px] grid-cols-1 gap-9 px-4 py-11 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <div className="mx-auto grid w-full max-w-[1120px] grid-cols-1 gap-9 px-4 py-11 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.3fr_1fr_1fr_1fr_1fr]">
         <div>
           <div className="mb-3.5">
             <LogoSlot size={40} />
