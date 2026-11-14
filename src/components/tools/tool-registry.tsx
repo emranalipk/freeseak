@@ -7,6 +7,7 @@ import { PercentageCalculator } from "./percentage-calculator";
 import { AgeCalculator } from "./age-calculator";
 import { ImageCompressor } from "./image-compressor";
 import { ImageResizer } from "./image-resizer";
+import { EnhanceTool } from "./enhance-image/enhance-tool";
 import { MergePdf } from "./merge-pdf";
 import { SplitPdf } from "./split-pdf";
 import { ImagesToPdf } from "./images-to-pdf";
@@ -29,6 +30,7 @@ export const TOOL_COMPONENTS: Record<string, ComponentType> = {
   "age-calculator": AgeCalculator,
   "compress-image": ImageCompressor,
   "resize-image": ImageResizer,
+  "enhance-image": EnhanceTool,
   "merge-pdf": MergePdf,
   "split-pdf": SplitPdf,
   "images-to-pdf": ImagesToPdf,

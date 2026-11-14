@@ -615,6 +615,51 @@ export const TOOLS: ToolDef[] = [
       },
     ],
   },
+  {
+    id: "enhance-image",
+    name: "Enhance Image",
+    short:
+      "Enhance and upscale photos free in your browser — denoise, sharpen, fix colors and exposure, upscale 2× / 4×. No sign-up, nothing uploaded.",
+    category: "image",
+    icon: "sparkles",
+    keywords:
+      "enhance image photo enhancer improve image quality upscale image image upscaler upscale 2x upscale 4x denoise photo remove noise sharpen image fix blurry photo brighten dark photo color correction auto enhance image increase image resolution make image clearer enlarge photo without losing quality image enhancement online free no sign up",
+    intro:
+      "Bring out detail in dull, noisy or blurry photos without uploading anything anywhere. Enhance Image fixes exposure and color, removes noise, sharpens edges and can upscale your picture 2× or 4× — all inside your browser. Start from a one-click Auto-tune that scans your photo for noise, blur and color casts, or a preset (Photo, Portrait, Text & Scan), then fine-tune every slider and compare with the Before / After handle. Because the work happens on your device, there is no sign-up, no watermark and no waiting queue.",
+    howTo: [
+      "Drop an image onto the page, click to browse, or paste it from the clipboard.",
+      "Press Auto-tune for a one-click fix, or start from a preset — Auto, Photo, Portrait or Text & Scan.",
+      "Fine-tune the sliders: noise removal, sharpening, clarity, brightness, contrast, colors and warmth.",
+      "Optionally upscale 2× or 4×, rotate or flip the image, and pick the output format and quality.",
+      "Drag the Before / After handle to compare, then press Download — the result is saved straight to your device.",
+    ],
+    faq: [
+      {
+        q: "Are my photos uploaded to a server?",
+        a: "No. The enhancer is a small program that runs inside your browser tab: the image is decoded, improved and re-encoded on your own device. Nothing is sent over the network — which is also why there is no sign-up, no queue and no waiting.",
+      },
+      {
+        q: "How does the upscaling work?",
+        a: "Pick 2× or 4× and the tool rebuilds your photo at the larger size with bicubic resampling, then sharpens edges so the result stays crisp instead of soft. It works best on old photos, screenshots and small web images that need to display or print larger.",
+      },
+      {
+        q: "What does Auto-tune actually do?",
+        a: "It scans your image for noise, blur, exposure problems, washed-out colors and color casts, then sets every slider to sensible values for that specific photo. Start from Auto-tune or a preset and still fine-tune anything by hand.",
+      },
+      {
+        q: "Will enhancing make my file bigger?",
+        a: "Usually yes — more detail and more pixels mean more data. You control the result by picking JPG or WebP and adjusting the quality slider, or PNG when you want lossless output. The confirmation notice always shows the final size.",
+      },
+      {
+        q: "Which file types can I use?",
+        a: "You can drop JPG, PNG, WebP, GIF, BMP and AVIF images, and save the result as JPG, PNG or WebP. Photos from modern phones work too — EXIF orientation is honored so they come out upright.",
+      },
+      {
+        q: "Is there a file size limit or account needed?",
+        a: "No account and no upload, so there is no server-side limit. Very large images (over 16 megapixels) are processed at a slightly reduced base size to keep your device responsive, and the final result is capped at 25 megapixels.",
+      },
+    ],
+  },
 ];
 
 export function getTool(id: string): ToolDef | undefined {

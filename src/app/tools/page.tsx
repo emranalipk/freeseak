@@ -8,9 +8,9 @@ import { CONTACT_EMAIL } from "@/lib/site";
  * indexable surface with its own copy and internal links).
  */
 export const metadata: Metadata = {
-  title: "All Free Online Tools — Image Tools, Calculators & Productivity",
+  title: "All Free Online Tools — PDF, Image Tools, Calculators & Productivity",
   description:
-    "Browse all six FreeSeak tools: QR code generator, word counter, percentage calculator, age calculator, image compressor and image resizer. All free, no sign-up, nothing uploaded.",
+    "Browse all 17 FreeSeak tools: PDF suite (merge, split, organize, compress and more), image tools (compress, resize, enhance and upscale), QR code generator, word counter, percentage calculator and age calculator. All free, no sign-up, nothing uploaded.",
   alternates: { canonical: "/tools" },
   openGraph: {
     title: "All Free Online Tools — FreeSeak",
