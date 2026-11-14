@@ -49,7 +49,19 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "no-useless-escape": "off",
   },
 }, {
-  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills"]
+  ignores: [
+    "node_modules/**",
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    "examples/**",
+    "skills",
+    // v0.5: vendored pdf.js workers — static assets copied from
+    // node_modules, not our code (same treatment as node_modules).
+    "public/pdf.worker.min.mjs",
+    "public/pdf.renderer.min.mjs",
+  ]
 }];
 
 export default eslintConfig;
