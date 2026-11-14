@@ -13,7 +13,7 @@ export default function DisclaimerPage() {
   return (
     <StaticPage
       title="Disclaimer"
-      updated="13 November 2026"
+      updated="14 November 2026"
       intro="FreeSeak tools are built to be accurate and dependable, but a few honest boundaries apply."
     >
       <PageSection heading="General information only">
@@ -30,9 +30,8 @@ export default function DisclaimerPage() {
           Nothing on FreeSeak constitutes professional advice. In particular:
           the Percentage Calculator results are mathematics, not financial
           advice; the Age Calculator output is a calendar computation, not a
-          legal determination; and the upcoming Invoice Generator produces a
-          document, not legal or tax advice. For decisions with consequences,
-          consult a qualified professional.
+          legal determination. For decisions with consequences, consult a
+          qualified professional.
         </p>
       </PageSection>
 

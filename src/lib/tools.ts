@@ -17,9 +17,13 @@
  *   ("make pdf smaller"), not just tool names.
  * - every live tool carries intro + how-to + 3-4 FAQs (PAA-style
  *   questions) — this is the content depth that earns rankings.
+ *
+ * v0.4: only live tools are listed — upcoming tools are no longer
+ * advertised anywhere on the site, so the old `ready` flag is gone
+ * (Rule 1: no dead code). A tool ships = its complete entry lands here.
  */
 
-export type CategoryId = "pdf" | "image" | "calc" | "prod";
+export type CategoryId = "image" | "calc" | "prod";
 
 export interface FaqItem {
   q: string;
@@ -35,8 +39,6 @@ export interface ToolDef {
   icon: string;
   /** synonym map for search — people search in verbs and problems */
   keywords: string;
-  /** a working component exists in tool-registry */
-  ready: boolean;
   intro?: string;
   howTo?: string[];
   faq?: FaqItem[];
@@ -44,14 +46,12 @@ export interface ToolDef {
 
 export const CATEGORIES: { id: CategoryId | "all"; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "pdf", label: "PDF & Documents" },
   { id: "image", label: "Image Tools" },
   { id: "calc", label: "Calculators" },
   { id: "prod", label: "Productivity & Business" },
 ];
 
 export const CATEGORY_LABEL: Record<CategoryId, string> = {
-  pdf: "PDF & Documents",
   image: "Image Tools",
   calc: "Calculators",
   prod: "Productivity & Business",
@@ -67,7 +67,6 @@ export const TOOLS: ToolDef[] = [
     icon: "qr",
     keywords:
       "qr code generator free qr code generator make a qr code create qr code online qr maker wifi qr code qr code for a link url qr code png svg download no watermark no sign up static qr code qr code for menu business card",
-    ready: true,
     intro:
       "Create a free QR code in seconds. Type a link, plain text or Wi-Fi details, watch the QR code build itself live, and download it in print quality as a PNG or a scalable SVG. Everything is generated on your device — no sign-up, no watermark, and no expiry: these are static QR codes, so the data is encoded directly into the image and works forever, even offline.",
     howTo: [
@@ -103,7 +102,6 @@ export const TOOLS: ToolDef[] = [
     icon: "type",
     keywords:
       "word counter word count character counter count characters online sentence counter paragraph counter reading time essay word limit twitter character count meta description length blog post length",
-    ready: true,
     intro:
       "Paste or type your text and watch words, characters, sentences, paragraphs and reading time update instantly. Handy for essays with word limits, tweets and social posts, meta descriptions, cover letters and articles — and your text is counted entirely in your browser, so it never leaves the page.",
     howTo: [
@@ -135,7 +133,6 @@ export const TOOLS: ToolDef[] = [
     icon: "percent",
     keywords:
       "percentage calculator percent of a number what percent of percentage change percentage difference percentage increase decrease calculator percent off discount calculator sale price tip calculator percent formula",
-    ready: true,
     intro:
       "The three percentage questions everyone has, answered instantly: what is X% of Y, X is what percent of Y, and how big is the percentage change from X to Y. Discounts, tips, price rises, exam scores, growth figures — type two numbers and read the answer. No formulas to remember, no calculate button.",
     howTo: [
@@ -167,7 +164,6 @@ export const TOOLS: ToolDef[] = [
     icon: "cake",
     keywords:
       "age calculator how old am i calculate age in months and days age in years months days days until my next birthday birthday countdown date of birth age difference chronological age school admission age exact age",
-    ready: true,
     intro:
       "Enter a date of birth and get the exact age in years, months and days — plus a countdown to the next birthday, with the day of the week it falls on. Precise enough for official forms, school admissions and visa applications that ask for exact age, and it handles leap-year birthdays correctly.",
     howTo: [
@@ -191,56 +187,6 @@ export const TOOLS: ToolDef[] = [
     ],
   },
   {
-    id: "compress-pdf",
-    name: "Compress PDF",
-    short: "Shrink PDF file size right in your browser — no uploads, no limits.",
-    category: "pdf",
-    icon: "file-down",
-    keywords:
-      "compress pdf make pdf smaller reduce pdf file size shrink pdf pdf compressor compress pdf online free without losing quality email limit",
-    ready: false,
-  },
-  {
-    id: "merge-pdf",
-    name: "Merge PDF",
-    short: "Combine multiple PDFs into one document — in your browser, free.",
-    category: "pdf",
-    icon: "file-stack",
-    keywords:
-      "merge pdf combine pdf join pdf put pdfs together merge pdf online free combine pdf files into one no upload",
-    ready: false,
-  },
-  {
-    id: "split-pdf",
-    name: "Split PDF",
-    short: "Extract the pages you need, or split a PDF into separate files.",
-    category: "pdf",
-    icon: "scissors",
-    keywords:
-      "split pdf extract pdf pages remove pages from pdf separate pdf into files pdf page remover",
-    ready: false,
-  },
-  {
-    id: "jpg-to-pdf",
-    name: "JPG to PDF",
-    short: "Turn photos into a single PDF document — no upload, no sign-up.",
-    category: "pdf",
-    icon: "file-image",
-    keywords:
-      "jpg to pdf image to pdf photo to pdf png to pdf convert images to pdf pictures into one pdf",
-    ready: false,
-  },
-  {
-    id: "pdf-to-jpg",
-    name: "PDF to JPG",
-    short: "Save PDF pages as JPG images — private, in-browser conversion.",
-    category: "pdf",
-    icon: "file-output",
-    keywords:
-      "pdf to jpg pdf to image convert pdf to png save pdf pages as images pdf picture extractor",
-    ready: false,
-  },
-  {
     id: "compress-image",
     name: "Compress Image",
     short:
@@ -249,7 +195,6 @@ export const TOOLS: ToolDef[] = [
     icon: "image-down",
     keywords:
       "compress image compress jpg compress png compress webp reduce image file size make image smaller shrink photo image compressor online free compress image to 100kb compress image without losing quality photo compressor for email reduce image size for website upload image too big compress without uploading no sign up",
-    ready: true,
     intro:
       "Shrink JPG, PNG and WebP files to the size you actually need. Pick a quality level, set an exact target such as 100 KB and let the compressor find the highest quality that fits, or start from a preset — web & email, high quality, smallest file. You can also cap the longest edge, which is handy for photos from modern phones. Everything runs in your browser: your images are never uploaded to a server, which is also why there are no file-size limits, no queues and no account.",
     howTo: [
@@ -286,7 +231,6 @@ export const TOOLS: ToolDef[] = [
     icon: "scaling",
     keywords:
       "resize image image resizer change image size resize photo resize png resize jpg resize image online free resize for instagram resize image to 1080x1080 social media image sizes youtube thumbnail size resize without losing quality image dimension converter scale image crop to size resize and convert format webp no sign up",
-    ready: true,
     intro:
       "Make any image the exact size you need — no design app required. Scale by percentage, set just the width or height (the other side follows automatically), demand exact dimensions with a centred crop, fit inside a box, or tap a one-click preset for Instagram, YouTube thumbnails, Facebook, X, LinkedIn, Pinterest, Full HD and 4K. Convert between JPG, PNG and WebP in the same step, and decide for yourself whether smaller images may be enlarged. As with every FreeSeak tool, the resizing happens entirely in your browser — nothing is uploaded.",
     howTo: [
@@ -314,20 +258,8 @@ export const TOOLS: ToolDef[] = [
       },
     ],
   },
-  {
-    id: "invoice-generator",
-    name: "Invoice Generator",
-    short: "Build a clean, printable invoice in a minute — free, no account.",
-    category: "prod",
-    icon: "receipt",
-    keywords:
-      "invoice generator free invoice maker bill generator receipt template quotation create invoice online printable pdf invoice",
-    ready: false,
-  },
 ];
 
 export function getTool(id: string): ToolDef | undefined {
   return TOOLS.find((t) => t.id === id);
 }
-
-export const READY_TOOLS = TOOLS.filter((t) => t.ready);

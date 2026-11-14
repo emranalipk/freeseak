@@ -8,9 +8,9 @@ import { CONTACT_EMAIL } from "@/lib/site";
  * indexable surface with its own copy and internal links).
  */
 export const metadata: Metadata = {
-  title: "All Free Online Tools — PDF, Image, Calculators & More",
+  title: "All Free Online Tools — Image Tools, Calculators & Productivity",
   description:
-    "Browse every FreeSeak tool: QR code generator, word counter, percentage calculator, age calculator — plus PDF and image tools in the build queue. All free, no sign-up.",
+    "Browse all six FreeSeak tools: QR code generator, word counter, percentage calculator, age calculator, image compressor and image resizer. All free, no sign-up, nothing uploaded.",
   alternates: { canonical: "/tools" },
   openGraph: {
     title: "All Free Online Tools — FreeSeak",
@@ -43,23 +43,21 @@ export default function ToolsIndexPage() {
 
       <section className="mt-8 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <h2 className="font-display text-[15px] font-bold text-foreground">
-          What is coming next
+          Missing a tool?
         </h2>
         <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
-          The PDF suite (compress, merge and split PDF, JPG↔PDF conversion)
-          and the image tools (compress and resize) are in the build queue,
-          followed by a free invoice generator. Every one of them will work
-          the same way: instantly, privately, on your device. Missing
-          something?{" "}
+          Every FreeSeak tool works the same way: instantly, privately,
+          entirely on your device — and new ones ship when they are genuinely
+          finished. If a tool you need is missing,{" "}
           <a
             href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
               "FreeSeak tool request",
             )}`}
             className="font-semibold text-primary hover:underline"
           >
-            Request a tool
+            request a tool
           </a>{" "}
-          — requests help decide what gets built first.
+          — requests help decide what gets built.
         </p>
       </section>
     </div>

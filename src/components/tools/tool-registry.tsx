@@ -10,7 +10,7 @@ import { ImageResizer } from "./image-resizer";
 
 /**
  * The tool registry: one line per working tool.
- * A catalogue entry (lib/tools.ts) with ready: true MUST have a component here.
+ * Every catalogue entry (lib/tools.ts) MUST have a component here.
  */
 export const TOOL_COMPONENTS: Record<string, ComponentType> = {
   "qr-generator": QrGenerator,

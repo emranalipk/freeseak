@@ -20,7 +20,7 @@ const FAQ = [
   },
   {
     q: "Which tools are coming next?",
-    a: "The PDF and image suites are in the build queue — compress, merge and split PDF, JPG↔PDF conversion, image compression and resizing — followed by the invoice generator and many more. You can request a tool; requests help decide what gets built first.",
+    a: "Six tools are live today: the QR Code Generator, Word Counter, Percentage Calculator, Age Calculator, Image Compressor and Image Resizer. Rather than promise a long roadmap, FreeSeak ships a tool when it is genuinely finished — missing something? Request it, and requests help decide what gets built.",
   },
 ];
 

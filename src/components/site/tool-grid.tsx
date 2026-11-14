@@ -3,13 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { toast } from "sonner";
 import { CATEGORIES, TOOLS, type CategoryId } from "@/lib/tools";
 import { ToolIcon } from "./tool-icon";
 
-/* v0.2: ready cards are real links to the tool's own page;
-   coming-soon cards stay buttons with a friendly toast.
-   v0.3: hideHeading — the /tools index page carries its own h1. */
+/* v0.2: every card links to the tool's own page.
+   v0.3: hideHeading — the /tools index page carries its own h1.
+   v0.4: the catalogue holds only live tools, so the coming-soon button
+   branch is gone (Rule 1). */
 const CARD_CLASS =
   "group flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-navy hover:shadow-md dark:hover:border-[#3E5C96] sm:p-4.5";
 
@@ -55,60 +55,25 @@ export function ToolGrid({ hideHeading = false }: { hideHeading?: boolean }) {
         </div>
 
         <div className="grid grid-cols-2 gap-3.5 md:grid-cols-3 lg:grid-cols-4">
-          {visible.map((t) => {
-            const body = (
-              <>
-                <span className="flex size-[42px] items-center justify-center rounded-xl bg-secondary">
-                  <ToolIcon
-                    icon={t.icon}
-                    className={`size-[22px] ${
-                      t.ready ? "text-primary" : "text-muted-foreground"
-                    }`}
-                  />
+          {visible.map((t) => (
+            <Link key={t.id} href={`/tools/${t.id}`} className={CARD_CLASS}>
+              <span className="flex size-[42px] items-center justify-center rounded-xl bg-secondary">
+                <ToolIcon icon={t.icon} className="size-[22px] text-primary" />
+              </span>
+              <span className="flex flex-col gap-1">
+                <span className="font-display text-[15px] font-bold text-foreground">
+                  {t.name}
                 </span>
-                <span className="flex flex-col gap-1">
-                  <span className="flex items-center gap-2">
-                    <span className="font-display text-[15px] font-bold text-foreground">
-                      {t.name}
-                    </span>
-                    {!t.ready && (
-                      <span className="rounded-full bg-muted px-1.5 py-px text-[9.5px] font-bold uppercase tracking-wide text-muted-foreground">
-                        Soon
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-[12.5px] leading-snug text-muted-foreground">
-                    {t.short}
-                  </span>
+                <span className="text-[12.5px] leading-snug text-muted-foreground">
+                  {t.short}
                 </span>
-                {t.ready && (
-                  <span className="mt-auto inline-flex translate-x-[-4px] items-center gap-1.5 text-[12px] font-bold text-primary opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100">
-                    Open tool
-                    <ArrowRight className="size-3" aria-hidden="true" />
-                  </span>
-                )}
-              </>
-            );
-
-            return t.ready ? (
-              <Link key={t.id} href={`/tools/${t.id}`} className={CARD_CLASS}>
-                {body}
-              </Link>
-            ) : (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() =>
-                  toast(`${t.name} is in the build queue`, {
-                    description: "It ships with the next development batch.",
-                  })
-                }
-                className={`${CARD_CLASS} cursor-not-allowed opacity-95`}
-              >
-                {body}
-              </button>
-            );
-          })}
+              </span>
+              <span className="mt-auto inline-flex translate-x-[-4px] items-center gap-1.5 text-[12px] font-bold text-primary opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100">
+                Open tool
+                <ArrowRight className="size-3" aria-hidden="true" />
+              </span>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

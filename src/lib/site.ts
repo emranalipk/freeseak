@@ -13,6 +13,14 @@ export const SITE_URL = "https://freeseak.com";
 
 export const SITE_NAME = "FreeSeak";
 
+/**
+ * v0.4: the company behind FreeSeak — the trust line shown in the hero
+ * subline, the footer copyright, tool pages and the Organization schema.
+ * One place, so the wording never drifts.
+ */
+export const OPERATOR_NAME = "Bluefrog";
+export const OPERATOR_EXPERIENCE = "10+ years of software experience";
+
 /** shown in the footer, the About page and the request-a-tool mailto */
 export const CONTACT_EMAIL = "hello@freeseak.com";
 

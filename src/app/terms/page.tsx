@@ -13,7 +13,7 @@ export default function TermsPage() {
   return (
     <StaticPage
       title="Terms of Use"
-      updated="13 November 2026"
+      updated="14 November 2026"
       intro="By using freeseak.com you agree to these terms. They are deliberately short: the service is simple, so the rules are too."
     >
       <PageSection heading="1. The service">
@@ -27,7 +27,7 @@ export default function TermsPage() {
       <PageSection heading="2. Your content stays yours">
         <p>
           You retain all rights to anything you create with a FreeSeak tool —
-          QR codes, counted text, calculations, invoices and any other output.
+          QR codes, counted text, calculations, images and any other output.
           Because processing happens on your device, we never receive your
           content in the first place and claim no licence over it.
         </p>

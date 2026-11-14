@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTool, READY_TOOLS } from "@/lib/tools";
+import { getTool, TOOLS } from "@/lib/tools";
 import { ToolPage } from "@/components/tools/tool-page";
 
 /**
@@ -9,7 +9,7 @@ import { ToolPage } from "@/components/tools/tool-page";
  * shareable, Google-indexable URL (instead of the old popup).
  */
 export function generateStaticParams() {
-  return READY_TOOLS.map((t) => ({ id: t.id }));
+  return TOOLS.map((t) => ({ id: t.id }));
 }
 
 type Params = { params: Promise<{ id: string }> };
@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function ToolPageRoute({ params }: Params) {
   const { id } = await params;
   const tool = getTool(id);
-  /* tools not marked ready simply don't exist as pages yet */
-  if (!tool || !tool.ready) notFound();
+  /* a tool without a catalogue entry has no page */
+  if (!tool) notFound();
   return <ToolPage tool={tool} />;
 }

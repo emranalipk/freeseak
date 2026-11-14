@@ -2,14 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, Search } from "lucide-react";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { searchTools } from "@/lib/search";
-import { CATEGORY_LABEL, READY_TOOLS, TOOLS, type ToolDef } from "@/lib/tools";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { CATEGORY_LABEL, TOOLS, type ToolDef } from "@/lib/tools";
+import {
+  CONTACT_EMAIL,
+  OPERATOR_EXPERIENCE,
+  OPERATOR_NAME,
+} from "@/lib/site";
 import { Button } from "@/components/ui/button";
 
-const QUICK = ["Compress PDF", "QR Code", "Word Counter", "Percentage", "Age"];
+const QUICK = [
+  "Compress Image",
+  "QR Code",
+  "Word Counter",
+  "Percentage",
+  "Age",
+];
 
 const TRUST = ["100% free", "No account", "Files never uploaded"];
 
@@ -56,13 +65,7 @@ export function Hero() {
   const choose = (tool: ToolDef) => {
     setOpen(false);
     setQuery("");
-    if (tool.ready) {
-      router.push(`/tools/${tool.id}`);
-    } else {
-      toast(`${tool.name} is in the build queue`, {
-        description: "It ships with the next development batch.",
-      });
-    }
+    router.push(`/tools/${tool.id}`);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -92,13 +95,20 @@ export function Hero() {
           Nothing uploaded
         </p>
 
+        {/* v0.4: keyword-led H1 — the old conversational question carried
+            zero search terms */}
         <h1 className="mt-4 font-display text-[clamp(30px,5vw,46px)] font-extrabold leading-[1.12] tracking-tight text-navy dark:text-[#CFE0FB]">
-          What do you need to do today?
+          Free, Private Online Tools — No Uploads, No Sign-Up
         </h1>
 
         <p className="mx-auto mt-3 max-w-[520px] text-[15.5px] text-muted-foreground">
           Smart, free tools that finish the job in your browser — your files
           never leave your device.
+        </p>
+
+        {/* v0.4: operator trust line (Bluefrog — see src/lib/site.ts) */}
+        <p className="mt-2.5 text-[12.5px] font-semibold text-muted-foreground/75">
+          Built by {OPERATOR_NAME} — {OPERATOR_EXPERIENCE}.
         </p>
 
         {/* search */}
@@ -123,7 +133,7 @@ export function Hero() {
               aria-expanded={open}
               aria-controls="hero-suggestions"
               aria-label="Search FreeSeak tools"
-              placeholder='Try "compress a PDF"…'
+              placeholder='Try "compress an image"…'
               autoComplete="off"
               spellCheck={false}
               className="min-w-0 flex-1 bg-transparent py-2.5 text-[15px] font-medium text-foreground outline-none placeholder:text-muted-foreground/70"
@@ -158,8 +168,8 @@ export function Hero() {
                     No tool for “{query.trim()}” yet
                   </p>
                   <p className="mt-0.5 text-[12.5px] text-muted-foreground">
-                    It might be on the roadmap — requests decide what gets
-                    built next.
+                    You can request it below — requests help decide what
+                    gets built.
                   </p>
                 </div>
               ) : (
@@ -190,16 +200,10 @@ export function Hero() {
                           <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
                             {CATEGORY_LABEL[t.category]}
                           </span>
-                          {t.ready ? (
-                            <Check
-                              className="size-3.5 shrink-0 text-mint"
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-secondary-foreground">
-                              Soon
-                            </span>
-                          )}
+                          <Check
+                            className="size-3.5 shrink-0 text-mint"
+                            aria-hidden="true"
+                          />
                         </button>
                       </li>
                     ))}
@@ -256,10 +260,9 @@ export function Hero() {
           ))}
         </div>
 
-        {/* ready count is honest: only working tools count */}
+        {/* honest count — every listed tool is live (v0.4: no queue) */}
         <p className="mt-5 text-[12px] text-muted-foreground/80">
-          {READY_TOOLS.length} tools live and working now ·{" "}
-          {TOOLS.length - READY_TOOLS.length} more in the build queue
+          {TOOLS.length} tools live and working now
         </p>
       </div>
     </section>

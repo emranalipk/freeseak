@@ -3,7 +3,8 @@ import { PageSection, StaticPage } from "@/components/site/static-page";
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
+  /* absolute: the title already carries the site + operator names */
+  title: { absolute: "Privacy Policy — FreeSeak by Bluefrog" },
   description:
     "FreeSeak privacy policy: every tool runs in your browser. No uploads, no accounts, no tracking cookies. Read exactly what is and is not collected.",
   alternates: { canonical: "/privacy-policy" },
@@ -13,15 +14,17 @@ export default function PrivacyPolicyPage() {
   return (
     <StaticPage
       title="Privacy Policy"
-      updated="13 November 2026"
+      updated="14 November 2026"
       intro="The short version: FreeSeak tools run entirely in your browser. Your files and text are never uploaded, and we do not track you across the web."
     >
       <PageSection heading="1. What FreeSeak does not collect">
         <p>
-          FreeSeak has no accounts, no sign-up forms and no file servers. When
-          you use a tool — generating a QR code, counting words, calculating a
-          percentage or an age — the work happens on your device, inside your
-          browser. The text you type and the files you work on are{" "}
+          FreeSeak (freeseak.com) is operated by Bluefrog. The site has no
+          accounts, no sign-up forms and no file servers. When you use a tool
+          — generating a QR code, counting words, calculating a percentage or
+          an age, compressing or resizing an image — the work happens on your
+          device, inside your browser. The text you type and the files you
+          work on are{" "}
           <strong>never transmitted to us or to any third party</strong>,
           never stored on our servers, and are gone the moment you close the
           tab.

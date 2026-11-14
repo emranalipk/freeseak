@@ -13,7 +13,7 @@ function readRecent(): string[] {
     if (!raw) return [];
     const ids = JSON.parse(raw);
     return Array.isArray(ids)
-      ? ids.filter((id) => typeof id === "string" && getTool(id)?.ready)
+      ? ids.filter((id) => typeof id === "string" && !!getTool(id))
       : [];
   } catch {
     return [];
@@ -42,7 +42,7 @@ function pushRecent(id: string) {
 
 /** v0.2: tool PAGES call this so the recent-tools chips stay accurate */
 export function recordVisit(id: string) {
-  if (getTool(id)?.ready) pushRecent(id);
+  if (getTool(id)) pushRecent(id);
 }
 
 /* v0.3: the v0.1 popup-overlay state (openId / openTool / closeTool) was

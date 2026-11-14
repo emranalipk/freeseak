@@ -25,21 +25,22 @@ export const metadata: Metadata = {
   /* v0.3: SITE_URL (freeseak.com) is the single source — see src/lib/site.ts */
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Free Online Tools — No Sign-Up, Nothing Uploaded | FreeSeak",
+    default: "Free Private Online Tools — No Uploads, No Sign-Up | FreeSeak",
     template: "%s | FreeSeak",
   },
   description:
-    "Free tools that run in your browser: QR generator, word counter, percentage and age calculators. No sign-up, no uploads — your files never leave your device.",
+    "Free, privacy-first tools that run entirely in your browser. Compress images, generate QR codes, and more — no files uploaded, no account needed. Built by Bluefrog.",
+  /* v0.4: keywords list only LIVE tools — never advertise tools that
+     do not exist */
   keywords: [
     "free online tools",
     "qr code generator",
     "word counter",
     "percentage calculator",
     "age calculator",
-    "compress pdf online",
-    "merge pdf",
+    "compress image",
+    "image compressor",
     "resize image",
-    "invoice generator",
     "no sign up tools",
   ],
   icons: {
@@ -51,9 +52,9 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: "FreeSeak — Free Online Tools",
+    title: "FreeSeak — Free Private Online Tools, No Uploads",
     description:
-      "Smart, free tools that finish the job in your browser. No sign-up, no uploads — your files never leave your device.",
+      "Free, privacy-first tools that run entirely in your browser. No files uploaded, no account needed. Built by Bluefrog.",
     siteName: SITE_NAME,
     type: "website",
     url: SITE_URL,
@@ -68,9 +69,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FreeSeak — Free Online Tools",
+    title: "FreeSeak — Free Private Online Tools, No Uploads",
     description:
-      "Smart, free tools that finish the job in your browser. No sign-up, no uploads.",
+      "Free, privacy-first tools that run entirely in your browser. No files uploaded, no account needed.",
     images: ["/og-image.png"],
   },
 };

@@ -10,8 +10,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ToolIcon } from "@/components/site/tool-icon";
-import { CATEGORY_LABEL, READY_TOOLS, type ToolDef } from "@/lib/tools";
-import { SITE_URL } from "@/lib/site";
+import { CATEGORY_LABEL, TOOLS, type ToolDef } from "@/lib/tools";
+import {
+  OPERATOR_EXPERIENCE,
+  OPERATOR_NAME,
+  SITE_URL,
+} from "@/lib/site";
 import { recordVisit } from "@/lib/tool-store";
 import { TOOL_COMPONENTS } from "./tool-registry";
 
@@ -31,10 +35,10 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
   const ToolComponent = TOOL_COMPONENTS[tool.id];
 
   const related = [
-    ...READY_TOOLS.filter(
+    ...TOOLS.filter(
       (t) => t.id !== tool.id && t.category === tool.category,
     ),
-    ...READY_TOOLS.filter(
+    ...TOOLS.filter(
       (t) => t.id !== tool.id && t.category !== tool.category,
     ),
   ].slice(0, 3);
@@ -216,6 +220,10 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
           <ArrowLeft className="size-4" aria-hidden="true" />
           Back to all tools
         </Link>
+        {/* v0.4: operator credit near the tool area */}
+        <p className="mt-2.5 text-[11.5px] font-semibold text-muted-foreground/70">
+          Built by {OPERATOR_NAME} — {OPERATOR_EXPERIENCE}
+        </p>
       </div>
 
       {[faqJsonLd, webAppJsonLd, breadcrumbJsonLd].map((ld, i) =>

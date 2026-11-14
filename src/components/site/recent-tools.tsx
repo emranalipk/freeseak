@@ -27,7 +27,7 @@ export function RecentTools() {
 
   const tools = ids
     .map((id) => getTool(id))
-    .filter((t): t is NonNullable<typeof t> => !!t && t.ready);
+    .filter((t): t is NonNullable<typeof t> => !!t);
 
   if (tools.length === 0) return null;
 

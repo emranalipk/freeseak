@@ -8,8 +8,8 @@ export interface SearchResult {
 
 /**
  * The FreeSeak search engine — client-side, instant, synonym-aware.
- * People search in verbs and problems ("make pdf smaller"), not tool
- * names, so every tool carries a keyword map in the catalogue.
+ * People search in verbs and problems ("make an image smaller"), not
+ * tool names, so every tool carries a keyword map in the catalogue.
  */
 export function searchTools(query: string): SearchResult {
   const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);

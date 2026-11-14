@@ -1,29 +1,19 @@
 import {
   Cake,
-  FileDown,
-  FileImage,
-  FileOutput,
-  FileStack,
   ImageDown,
   Percent,
   QrCode,
-  Receipt,
   Scaling,
-  Scissors,
   Type,
   type LucideIcon,
 } from "lucide-react";
 
+/* v0.4: icon keys for the 6 live tools — entries for planned tools
+   were removed with their catalogue entries (Rule 1). */
 const TOOL_ICONS: Record<string, LucideIcon> = {
-  "file-down": FileDown,
-  "file-stack": FileStack,
-  scissors: Scissors,
-  "file-image": FileImage,
-  "file-output": FileOutput,
   "image-down": ImageDown,
   scaling: Scaling,
   qr: QrCode,
-  receipt: Receipt,
   type: Type,
   percent: Percent,
   cake: Cake,
