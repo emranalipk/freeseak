@@ -12,6 +12,7 @@ import {
   Percent,
   QrCode,
   Repeat,
+  PenLine,
   Scaling,
   ScanText,
   Sparkles,
@@ -24,7 +25,8 @@ import {
 
 /* v0.4: icon keys for the 6 live tools — entries for planned tools
    were removed with their catalogue entries (Rule 1).
-   v0.5: + the 10 PDF tools. v0.8: + the image suite completion. */
+   v0.5: + the 10 PDF tools. v0.8: + the image suite completion.
+   v0.9: + the editor's pen. */
 const TOOL_ICONS: Record<string, LucideIcon> = {
   "image-down": ImageDown,
   scaling: Scaling,
@@ -38,6 +40,7 @@ const TOOL_ICONS: Record<string, LucideIcon> = {
   images: Images,
   layout: LayoutGrid,
   ordered: ListOrdered,
+  pen: PenLine,
   stamp: Stamp,
   sparkles: Sparkles,
   scan: ScanText,

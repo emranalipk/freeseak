@@ -416,6 +416,49 @@ export const TOOLS: ToolDef[] = [
     ],
   },
   {
+    id: "edit-pdf",
+    name: "Edit PDF",
+    short:
+      "Edit PDF files free online — add real text in any language, double-click to retype existing text, sign, white-out, highlight, fill forms, read scans with OCR. No sign-up, nothing uploaded.",
+    category: "pdf",
+    icon: "pen",
+    keywords:
+      "edit pdf pdf editor add text to pdf write on pdf sign pdf fill pdf form white out pdf redact pdf cover text pdf highlight pdf draw on pdf annotate pdf add signature to pdf insert image into pdf stamp pdf edit scanned pdf ocr pdf type on pdf retype pdf pdf editor no upload free pdf editor no sign up",
+    intro:
+      "The flagship the suite was missing: a real editing workspace. All pages scroll continuously like a document viewer — click to add text that becomes genuine, selectable PDF text in 13 font families (Noto covers Chinese, Cyrillic, Greek and more), double-click any existing line to retype it, draw or upload a signature, cover anything with a variable-width white-out brush, highlight, draw shapes, stamp images, and fill PDF forms. Scanned pages are no dead end: the built-in OCR reads printed English right on your device and turns it into editable text boxes — and password-protected files open with their password. The honest truth about editing existing text: PDF has no word processor inside, so text is covered and replaced — and when it matters, one tick flattens pages to images so redactions are truly gone. Everything runs in your browser; nothing is uploaded.",
+    howTo: [
+      "Drop in your PDF — every page appears in one continuous workspace, ready to edit.",
+      "Pick a tool — Text, Sign, White-out, Highlight, Draw, shapes, Image, Forms or OCR — and click or drag on the page. Double-click existing text to retype it; select anything to move, resize, restyle or delete it.",
+      "Press Export — added text stays real, selectable PDF text. Tick “Flatten every page to an image” when redacting sensitive content or you want a tamper-proof copy.",
+    ],
+    faq: [
+      {
+        q: "Can this editor change the text that is already in my PDF?",
+        a: "Yes — double-click any line with the Select tool: the original is covered automatically and your editable copy drops on top at the same size; one undo removes both. It edits honestly, the way PDF actually works — there is no word processor inside the PDF format, so nothing reflows. What you add is real PDF text — selectable, searchable, and it survives copies.",
+      },
+      {
+        q: "How do I sign a PDF online for free?",
+        a: "Open your PDF, press Sign, draw your signature with mouse, finger or stylus, and it lands on the page as a transparent image you can drag and resize onto the signature line. It happens entirely on your device — the signed document never leaves your computer.",
+      },
+      {
+        q: "Is the white-out safe for redacting confidential information?",
+        a: "White-out visually covers content. For absolute certainty — redacting secrets that must be unrecoverable — tick “Flatten every page to an image” when exporting: edited pages are rasterised, so the covered content is physically removed from the file instead of hiding underneath a white box.",
+      },
+      {
+        q: "What does the OCR tool do here?",
+        a: "It reads printed English text out of scanned pages — on your device, powered by a local recognition engine that loads once (~10 MB, cached) and then works offline. Each recognised line becomes an editable text box at its original position, so a scan finally turns into a PDF you can correct and reuse. OCR is English-only, and the tool says so — no pretending.",
+      },
+      {
+        q: "Can I edit a password-protected PDF?",
+        a: "Yes — type the password once and the editor opens the file on your device; annotate, sign and white-out as usual. Because a protected file's content cannot be rewritten, the export rebuilds each page as a high-quality image with your edits burned in: visually identical, no longer text-selectable.",
+      },
+      {
+        q: "Which languages can I type in?",
+        a: "The 12 standard PDF fonts cover English and most Western European languages. Pick Noto Sans for Polish, Turkish, Czech, Cyrillic, Greek or Chinese — 8 more open-licensed families (Inter, Roboto, Caveat and friends) are there for looks, and at export any text a font can't encode switches to Noto automatically, so nothing comes out as boxes or gibberish.",
+      },
+    ],
+  },
+  {
     id: "qr-generator",
     name: "QR Code Generator",
     short:

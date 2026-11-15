@@ -144,3 +144,21 @@
 .thin-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
+/* the editing surface: page canvas with a soft drop shadow */
+.page-canvas {
+  box-shadow:
+    0 1px 2px rgb(16 22 38 / 0.08),
+    0 12px 32px -8px rgb(16 22 38 / 0.25);
+}
+
+/* selection handles on annotation objects */
+.sel-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgb(16 22 38 / 0.35);
+  touch-action: none;
+}

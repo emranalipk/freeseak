@@ -3,11 +3,14 @@
 /**
  * Extract Text — pull the text layer out of any PDF into plain .txt.
  * pdf.js reads the characters on the visitor's device; scanned PDFs
- * (images without a text layer) get an honest message, not fake output.
+ * (images without a text layer) get the on-device OCR rescue path
+ * instead of a dead end.
  */
 
 import { useState } from "react";
+import { ScanText } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   ActionRow,
   LoadedPdfCard,
@@ -18,7 +21,8 @@ import {
   type OutputFile,
 } from "./pdf-shared";
 import { parsePageRange, pdfErrorMessage } from "./pdf-utils";
-import { extractPageText, openWithPdfJs } from "./pdf-render";
+import { extractPageText, openWithPdfJs, renderPdfPage } from "./pdf-render";
+import { ocrCanvas } from "./ocr-engine";
 
 interface Extraction {
   text: string;
@@ -34,26 +38,29 @@ export function ExtractPdfText() {
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [extraction, setExtraction] = useState<Extraction | null>(null);
   const [results, setResults] = useState<OutputFile[]>([]);
+  const [ocrBusy, setOcrBusy] = useState<{ done: number; total: number } | null>(null);
 
   const pdf = state.status === "ready" ? state.pdf : null;
   const parsed = pdf ? parsePageRange(range, pdf.pageCount) : null;
-  const canRun =
-    pdf !== null && parsed !== null && parsed.valid && parsed.pages.length > 0;
+  /* an empty range means every page — that is what the placeholder promises */
+  const canRun = pdf !== null && parsed !== null && parsed.valid;
+  const selectedPages =
+    pdf && parsed && parsed.pages.length > 0 ? parsed.pages : pdf ? Array.from({ length: pdf.pageCount }, (_, i) => i) : [];
 
   const run = async () => {
     if (!pdf || !parsed || !canRun) return;
     setBusy(true);
     setExtraction(null);
     setResults([]);
-    setProgress({ done: 0, total: parsed.pages.length });
+    setProgress({ done: 0, total: selectedPages.length });
     try {
       const bytes = new Uint8Array(await pdf.file.arrayBuffer());
       const doc = await openWithPdfJs(bytes);
       const chunks: string[] = [];
-      for (let i = 0; i < parsed.pages.length; i++) {
-        const pageText = await extractPageText(doc, parsed.pages[i] + 1);
+      for (let i = 0; i < selectedPages.length; i++) {
+        const pageText = await extractPageText(doc, selectedPages[i] + 1);
         chunks.push(pageText.trim());
-        setProgress({ done: i + 1, total: parsed.pages.length });
+        setProgress({ done: i + 1, total: selectedPages.length });
         await new Promise((r) => setTimeout(r, 0));
       }
       await doc.cleanup();
@@ -62,11 +69,10 @@ export function ExtractPdfText() {
       const words = text.split(/\s+/).filter(Boolean).length;
 
       if (text.trim().length === 0) {
-        toast.info("No text found", {
-          description:
-            "This PDF has no text layer — it is most likely a scan (images of pages). Extracting text from scans needs OCR, which this tool doesn't do.",
+        setExtraction({ text: "", pages: selectedPages.length, words: 0, chars: 0 });
+        toast.info("No text layer — this looks like a scan", {
+          description: "Pages made of images have no characters to extract. Run OCR below to read printed English text on your device.",
         });
-        setExtraction({ text: "", pages: parsed.pages.length, words: 0, chars: 0 });
       } else {
         setExtraction({
           text,
@@ -85,6 +91,42 @@ export function ExtractPdfText() {
       toast.error(pdfErrorMessage(err));
     } finally {
       setBusy(false);
+    }
+  };
+
+  /**
+   * The scan rescue path: OCR the selected pages locally (Tesseract.js,
+   * assets served from /ocr — never a CDN) and hand back plain text.
+   */
+  const runOcr = async () => {
+    if (!pdf || !parsed || !parsed.valid || ocrBusy) return;
+    setOcrBusy({ done: 0, total: selectedPages.length });
+    setExtraction(null);
+    setResults([]);
+    try {
+      const bytes = new Uint8Array(await pdf.file.arrayBuffer());
+      const doc = await openWithPdfJs(bytes);
+      const chunks: string[] = [];
+      for (let i = 0; i < selectedPages.length; i++) {
+        const rendered = await renderPdfPage(doc, selectedPages[i] + 1, 2);
+        const result = await ocrCanvas(rendered.canvas);
+        chunks.push(result.text.length > 0 ? result.text : "(no readable text on this page)");
+        setOcrBusy({ done: i + 1, total: selectedPages.length });
+      }
+      await doc.cleanup();
+      const text = chunks.join("\n\n");
+      const words = text.split(/\s+/).filter(Boolean).length;
+      setExtraction({ text, pages: selectedPages.length, words, chars: text.length });
+      const base = pdf.file.name.replace(/\.pdf$/i, "");
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      setResults([{ blob, name: `${base}-ocr.txt`, note: "Recognised by on-device OCR (English)" }]);
+      toast.success("OCR finished", {
+        description: "Processed on your device — nothing was uploaded.",
+      });
+    } catch {
+      toast.error("OCR failed — the recognition engine couldn't be loaded on this device.");
+    } finally {
+      setOcrBusy(null);
     }
   };
 
@@ -130,8 +172,8 @@ export function ExtractPdfText() {
             />
             <p className="text-[12px] leading-relaxed text-muted-foreground">
               Works on PDFs with a real text layer — exports from Word, LaTeX,
-              browsers and most apps. Scanned documents are images and need
-              OCR (not supported here — honestly, rather than pretending).
+              browsers and most apps. Scanned documents get the OCR path below:
+              recognition runs on your device, in English.
             </p>
           </div>
 
@@ -156,7 +198,7 @@ export function ExtractPdfText() {
               <div className="flex flex-wrap gap-x-5 gap-y-1">
                 <span className="text-[12.5px] text-muted-foreground">
                   <span className="font-bold text-foreground">{extraction.pages}</span>{" "}
-                  pages read
+                  page{extraction.pages === 1 ? "" : "s"} read
                 </span>
                 <span className="text-[12.5px] text-muted-foreground">
                   <span className="font-bold text-foreground">
@@ -180,10 +222,30 @@ export function ExtractPdfText() {
                   className="w-full resize-y rounded-xl border border-border bg-secondary/40 p-3 font-mono text-[12px] leading-relaxed text-foreground"
                 />
               ) : (
-                <p className="rounded-xl border border-border bg-secondary/40 p-3 text-[12.5px] leading-relaxed text-muted-foreground">
-                  No text layer found — this PDF is most likely a scan. The pages
-                  are images, so there are no characters to extract.
-                </p>
+                <div className="flex flex-col gap-2.5 rounded-xl border border-border bg-secondary/40 p-3">
+                  <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                    No text layer found — this PDF is most likely a scan: its pages are images, so there are no
+                    characters to extract.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="self-start"
+                    disabled={busy || ocrBusy !== null}
+                    onClick={() => void runOcr()}
+                  >
+                    <ScanText className="size-3.5" aria-hidden="true" />
+                    Run OCR instead (English, on-device)
+                  </Button>
+                  {ocrBusy && (
+                    <p className="text-[11.5px] text-muted-foreground">
+                      {ocrBusy.done === 0
+                        ? "Loading the recognition engine (first run only, ~15 MB)…"
+                        : `Reading pages… ${ocrBusy.done}/${ocrBusy.total}`}
+                    </p>
+                  )}
+                </div>
               )}
               {extraction.text.length > 5000 && (
                 <p className="text-[11.5px] text-muted-foreground">
@@ -203,6 +265,7 @@ export function ExtractPdfText() {
               setRange("");
               setExtraction(null);
               setResults([]);
+              setOcrBusy(null);
             }}
             clearDisabled={false}
           >
