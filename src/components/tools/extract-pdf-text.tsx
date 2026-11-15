@@ -211,7 +211,7 @@ export function ExtractPdfText() {
         </>
       )}
 
-      <ResultsPanel files={results} zipName="extracted-text.zip" />
+      <ResultsPanel files={results} zipName="freeseak-extracted-text.zip" />
     </div>
   );
 }

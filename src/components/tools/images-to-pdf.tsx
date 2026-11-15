@@ -316,7 +316,7 @@ export function ImagesToPdf() {
         </>
       )}
 
-      <ResultsPanel files={results} zipName="images.pdf" />
+      <ResultsPanel files={results} zipName="freeseak-image-pdfs.zip" />
     </div>
   );
 }

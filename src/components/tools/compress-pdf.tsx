@@ -258,7 +258,7 @@ export function CompressPdf() {
         </>
       )}
 
-      <ResultsPanel files={results} zipName="compressed-pdfs.zip" />
+      <ResultsPanel files={results} zipName="freeseak-compressed-pdfs.zip" />
     </div>
   );
 }

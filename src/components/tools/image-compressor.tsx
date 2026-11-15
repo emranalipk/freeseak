@@ -26,7 +26,6 @@ import { ImageDropZone } from "./image-drop";
 import {
   detectWebpEncode,
   dimsForMaxDim,
-  downloadAllBlobs,
   downloadBlob,
   encodeImage,
   encodeToTarget,
@@ -34,6 +33,7 @@ import {
   loadImageFile,
   outputFilename,
   resolveMime,
+  zipAndDownload,
   FORMAT_OPTIONS,
   type FormatChoice,
 } from "./image-utils";
@@ -124,6 +124,7 @@ function qualityHint(q: number): string {
 export function ImageCompressor() {
   const [items, setItems] = useState<QueueItem[]>([]);
   const [busy, setBusy] = useState(false);
+  const [zipping, setZipping] = useState(false);
   const [mode, setMode] = useState<Mode>("quality");
   const [qualityPct, setQualityPct] = useState(80);
   const [targetKB, setTargetKB] = useState(100);
@@ -630,17 +631,37 @@ export function ImageCompressor() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() =>
-                downloadAllBlobs(
-                  done.map((i) => ({
-                    blob: i.result!.blob,
-                    name: i.result!.name,
-                  })),
-                )
-              }
+              disabled={zipping}
+              onClick={async () => {
+                if (done.length === 1) {
+                  downloadBlob(done[0].result!.blob, done[0].result!.name);
+                  return;
+                }
+                setZipping(true);
+                try {
+                  await zipAndDownload(
+                    done.map((i) => ({
+                      blob: i.result!.blob,
+                      name: i.result!.name,
+                    })),
+                    "freeseak-compressed-images.zip",
+                    { store: true },
+                  );
+                } catch {
+                  toast.error(
+                    "Couldn't build the zip — download the images one by one.",
+                  );
+                } finally {
+                  setZipping(false);
+                }
+              }}
             >
-              <Download className="size-3.5" aria-hidden="true" />
-              Download all
+              {zipping ? (
+                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Download className="size-3.5" aria-hidden="true" />
+              )}
+              {done.length > 1 ? "Download all (.zip)" : "Download"}
             </Button>
           </div>
 

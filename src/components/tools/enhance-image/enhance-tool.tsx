@@ -19,6 +19,7 @@ import {
   TriangleAlert,
   X,
 } from 'lucide-react';
+import { downloadBlob } from '../image-utils';
 import {
   EnhanceClient,
   FORMAT_META,
@@ -441,15 +442,9 @@ export function EnhanceTool() {
         }
       );
       const blob = await encodeResult(res);
-      const url = URL.createObjectURL(blob);
       const baseName = (loaded.info.name.replace(/\.[^.]+$/, '') || 'image').slice(0, 60);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `freeseak_${baseName}_${settings.scale}x.${FORMAT_META[format].ext}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      /* the shared helper adds the brand marker → "photo-2x-freeseak.jpg" */
+      downloadBlob(blob, `${baseName}-${settings.scale}x.${FORMAT_META[format].ext}`);
       showNotice('ok', `Saved to your device — ${res.width} × ${res.height} px · ${formatBytes(blob.size)} · done locally in ${(res.ms / 1000).toFixed(1)}s`);
     } catch (err) {
       showNotice('error', `Download failed: ${err instanceof Error ? err.message : 'unknown error'}`);

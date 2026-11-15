@@ -382,7 +382,7 @@ export function WatermarkPdf() {
         </>
       )}
 
-      <ResultsPanel files={results} zipName="watermarked.pdf" />
+      <ResultsPanel files={results} zipName="freeseak-watermarked-pdfs.zip" />
     </div>
   );
 }

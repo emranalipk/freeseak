@@ -294,7 +294,7 @@ export function AddPageNumbers() {
         </>
       )}
 
-      <ResultsPanel files={results} zipName="numbered.pdf" />
+      <ResultsPanel files={results} zipName="freeseak-numbered-pdfs.zip" />
     </div>
   );
 }

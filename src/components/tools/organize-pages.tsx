@@ -341,7 +341,7 @@ export function OrganizePages() {
         </>
       )}
 
-      <ResultsPanel files={results} zipName="organized.pdf" />
+      <ResultsPanel files={results} zipName="freeseak-organized-pdfs.zip" />
     </div>
   );
 }

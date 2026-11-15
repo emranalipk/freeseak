@@ -83,7 +83,7 @@ export function MergePdf() {
         </>
       )}
 
-      <ResultsPanel files={results} zipName="merged-pdfs.zip" />
+      <ResultsPanel files={results} zipName="freeseak-merged-pdfs.zip" />
     </div>
   );
 }

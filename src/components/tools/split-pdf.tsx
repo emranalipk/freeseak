@@ -200,7 +200,7 @@ export function SplitPdf() {
         </>
       )}
 
-      <ResultsPanel files={results} zipName="split-pages.zip" />
+      <ResultsPanel files={results} zipName="freeseak-split-pages.zip" />
     </div>
   );
 }

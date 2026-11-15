@@ -4,15 +4,15 @@
  * FreeSeak — the shared engine behind the PDF tools.
  *
  * Everything runs client-side (PROJECT_RULES.md rule 5): pdf-lib edits
- * documents, pdf.js renders pages, JSZip bundles multi-file results. The
- * libraries are imported lazily so only the tool page you open ever pays
- * the download cost — the homepage stays light.
+ * documents, pdf.js renders pages. The libraries are imported lazily so
+ * only the tool page you open ever pays the download cost — the homepage
+ * stays light. Zip bundling and downloads live in ./image-utils, the one
+ * module every tool family already imports.
  *
  * Import this module ONLY from client components ("use client").
  */
 
 import type { PDFDocument as LibPDFDocument } from "pdf-lib";
-import { downloadBlob, formatBytes } from "./image-utils";
 
 /* ------------------------------------------------------------------ */
 /* lazy library loading                                                */
@@ -26,23 +26,6 @@ export function loadPdfLib(): Promise<typeof import("pdf-lib")> {
     pdfLibPromise = import("pdf-lib");
   }
   return pdfLibPromise;
-}
-
-type JSZipCtor = typeof import("jszip");
-let jsZipPromise: Promise<JSZipCtor> | null = null;
-
-/** JSZip — bundles many output files into one .zip download */
-export function loadJsZip(): Promise<JSZipCtor> {
-  if (!jsZipPromise) {
-    /* jszip types use `export =`, but the bundler hands dynamic imports
-       a namespace whose constructor sits on .default — bridge both */
-    jsZipPromise = import("jszip").then(
-      (m) =>
-        (m as unknown as { default?: JSZipCtor }).default ??
-        (m as unknown as JSZipCtor),
-    );
-  }
-  return jsZipPromise;
 }
 
 /* ------------------------------------------------------------------ */
@@ -183,22 +166,15 @@ export function describeIndices(indices: number[]): string {
 
 /** standard save — object streams keep the file small */
 export async function savePdf(doc: LibPDFDocument): Promise<Blob> {
+  /* invisible branding (v0.7.0): Producer/Creator survive filename
+     renames and show up in every PDF viewer's file properties — the
+     same field other software fills with its own name */
+  doc.setProducer("FreeSeak (freeseak.com)");
+  doc.setCreator("FreeSeak (freeseak.com)");
   const bytes = await doc.save({ useObjectStreams: true });
   /* pdf-lib hands back an exact-size Uint8Array; TS's newer BlobPart
      wants an ArrayBuffer-backed view, hence the assertion */
   return new Blob([bytes as BlobPart], { type: "application/pdf" });
-}
-
-/** merge many output files into a single .zip download */
-export async function zipAndDownload(
-  items: { blob: Blob; name: string }[],
-  zipName: string,
-): Promise<void> {
-  const JSZip = await loadJsZip();
-  const zip = new JSZip();
-  for (const item of items) zip.file(item.name, item.blob);
-  const zipped = await zip.generateAsync({ type: "blob" });
-  downloadBlob(zipped, zipName);
 }
 
 /* ------------------------------------------------------------------ */
@@ -269,4 +245,4 @@ export function hexToRgb(
   };
 }
 
-export { formatBytes, downloadBlob };
+export { formatBytes, downloadBlob, zipAndDownload } from "./image-utils";

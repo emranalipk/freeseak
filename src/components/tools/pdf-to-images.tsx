@@ -208,7 +208,7 @@ export function PdfToImages() {
 
       <ResultsPanel
         files={results}
-        zipName={`${pdf ? pdf.file.name.replace(/\.pdf$/i, "") : "pdf"}-images.zip`}
+        zipName={`freeseak-${pdf ? pdf.file.name.replace(/\.pdf$/i, "") : "pdf"}-images.zip`}
       />
     </div>
   );

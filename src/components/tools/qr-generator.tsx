@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { downloadBlob } from "./image-utils";
 
 const SIZES = [
   { value: "256", label: "256 × 256 — web" },
@@ -79,20 +80,21 @@ export function QrGenerator() {
     };
   }, [text, size, options]);
 
-  const download = (href: string, filename: string) => {
-    const a = document.createElement("a");
-    a.href = href;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  const download = (blob: Blob, filename: string) => {
+    /* shared helper — keeps the brand marker on every FreeSeak file */
+    downloadBlob(blob, filename);
     toast.success("Your QR code is ready", {
       description: "Generated on your device — it never left your browser.",
     });
   };
 
-  const downloadPng = () => {
-    if (dataUrl) download(dataUrl, "freeseak-qr-code.png");
+  const downloadPng = async () => {
+    if (!dataUrl) return;
+    try {
+      download(await (await fetch(dataUrl)).blob(), "freeseak-qr-code.png");
+    } catch {
+      setError("Could not save the PNG — try again.");
+    }
   };
 
   const downloadSvg = async () => {
@@ -100,10 +102,7 @@ export function QrGenerator() {
     if (!trimmed) return;
     try {
       const svg = await QRCode.toString(trimmed, { type: "svg", ...options });
-      const blob = new Blob([svg], { type: "image/svg+xml" });
-      const url = URL.createObjectURL(blob);
-      download(url, "freeseak-qr-code.svg");
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      download(new Blob([svg], { type: "image/svg+xml" }), "freeseak-qr-code.svg");
     } catch {
       setError("Could not create the SVG — try again.");
     }

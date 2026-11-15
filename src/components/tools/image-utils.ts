@@ -2,9 +2,9 @@
  * FreeSeak — the shared engine behind the image tools.
  *
  * Decode → canvas → re-encode, entirely in the browser: no file is ever
- * uploaded (PROJECT_RULES.md rule 5). Both the Image Compressor and the
- * Image Resizer import from this module, so every export below must stay
- * in use — no dead code (rule 1).
+ * uploaded (PROJECT_RULES.md rule 5). Every tool that hands files back
+ * to the user — images and PDFs alike — downloads through this module,
+ * so the brand marker and the zip bundler live here exactly once.
  */
 
 export type OutputMime = "image/jpeg" | "image/png" | "image/webp";
@@ -331,20 +331,99 @@ export function outputFilename(original: string, suffix: string, mime: string): 
   return `${base}${suffix}.${extForMime(mime)}`;
 }
 
+/* ------------------------------------------------------------------ */
+/* downloads — every file FreeSeak hands back carries the brand        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Suffix-style brand marker on every downloaded filename (v0.7.0):
+ * "beach-compressed.jpg" → "beach-compressed-freeseak.jpg".
+ *
+ * Names that already carry the brand are returned unchanged, whatever
+ * their style — "freeseak-qr-code.png" (generated files keep the prefix
+ * form) and "freeseak-images.zip" (containers) stay as they are, and
+ * re-processing a downloaded file never stacks a second marker.
+ */
+export function brandFilename(name: string): string {
+  const dot = name.lastIndexOf(".");
+  const ext = dot > 0 ? name.slice(dot) : "";
+  let base = (dot > 0 ? name.slice(0, dot) : name).trim();
+  if (!base) base = "file";
+  /* already branded? leave prefix-style names alone, rebuild the rest */
+  if (/(^|[\s_-])freeseak([\s_-]|$)/i.test(base)) {
+    if (/^freeseak[\s_-]/i.test(base)) return name;
+    base = base
+      .replace(/(^|[\s_-])freeseak([\s_-]|$)/gi, "$1")
+      .replace(/[\s_-]+$/, "")
+      .trim();
+    return `${base || "file"}-freeseak${ext}`;
+  }
+  /* filesystem-illegal characters out, length capped for old filesystems */
+  base = base.replace(/[\\/:*?"<>|\x00-\x1f]/g, "").trim() || "file";
+  if (base.length > 100) base = base.slice(0, 100).trimEnd();
+  return `${base}-freeseak${ext}`;
+}
+
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = filename;
+  anchor.download = brandFilename(filename);
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
-/** stagger the downloads so browsers don't block a rapid-fire burst */
-export function downloadAllBlobs(items: { blob: Blob; name: string }[]): void {
-  items.forEach((item, index) => {
-    setTimeout(() => downloadBlob(item.blob, item.name), index * 400);
-  });
+type JSZipCtor = typeof import("jszip");
+let jsZipPromise: Promise<JSZipCtor> | null = null;
+
+/** JSZip (~100 KB, lazy) — bundles many output files into one .zip */
+export function loadJsZip(): Promise<JSZipCtor> {
+  if (!jsZipPromise) {
+    /* jszip types use `export =`, but the bundler hands dynamic imports
+       a namespace whose constructor sits on .default — bridge both */
+    jsZipPromise = import("jszip").then(
+      (m) =>
+        (m as unknown as { default?: JSZipCtor }).default ??
+        (m as unknown as JSZipCtor),
+    );
+  }
+  return jsZipPromise;
+}
+
+/**
+ * Merge many output files into a single branded .zip download. Inner
+ * names are branded too, and duplicates get "-2", "-3" … so two
+ * "photo.jpg" results can never silently overwrite each other inside
+ * the archive.
+ *
+ * `store: true` skips re-compression — photos and PDFs are already
+ * compressed, so bundling them is pure container work and much faster.
+ */
+export async function zipAndDownload(
+  items: { blob: Blob; name: string }[],
+  zipName: string,
+  opts?: { store?: boolean },
+): Promise<void> {
+  const JSZip = await loadJsZip();
+  const zip = new JSZip();
+  const used = new Set<string>();
+  for (const item of items) {
+    let name = brandFilename(item.name);
+    if (used.has(name)) {
+      const dot = name.lastIndexOf(".");
+      const stem = dot > 0 ? name.slice(0, dot) : name;
+      const ext = dot > 0 ? name.slice(dot) : "";
+      let n = 2;
+      while (used.has(`${stem}-${n}${ext}`)) n += 1;
+      name = `${stem}-${n}${ext}`;
+    }
+    used.add(name);
+    zip.file(name, item.blob);
+  }
+  const zipped = await zip.generateAsync(
+    opts?.store ? { type: "blob", compression: "STORE" } : { type: "blob" },
+  );
+  downloadBlob(zipped, zipName);
 }

@@ -206,7 +206,7 @@ export function EditPdfMetadata() {
         </>
       )}
 
-      <ResultsPanel files={results} zipName="metadata.pdf" />
+      <ResultsPanel files={results} zipName="freeseak-metadata-pdfs.zip" />
     </div>
   );
 }
