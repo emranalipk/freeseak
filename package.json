@@ -1,6 +1,6 @@
 {
   "name": "freeseak",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -13,8 +13,12 @@
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-radio-group": "^1.5.1",
     "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-slider": "^1.6.1",
     "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.4.1",
+    "@radix-ui/react-tooltip": "^1.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
