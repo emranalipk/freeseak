@@ -50,6 +50,21 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* v0.10.0 — Jameel Noori Nastaleeq (Urdu) for the Punjab Registry
+   Estimator. Self-hosted (public/fonts), 5.2 MB WOFF2 — the browser
+   only fetches it when Urdu text actually renders (the estimator's
+   Urdu mode sets font-urdu on its content), so English visitors never
+   download a byte of it. font-display: swap shows fallback text while
+   it loads; the estimator's PDF/image export awaits document.fonts
+   before capturing, so exports always render the real font. */
+@font-face {
+  font-family: "Jameel Noori Nastaleeq";
+  src: url("/fonts/JameelNooriNastaleeq.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* FreeSeak — Discovery Blue (light) */
 :root {
   --radius: 0.75rem;

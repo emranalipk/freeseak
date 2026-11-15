@@ -22,6 +22,7 @@ import { ExtractPdfText } from "./extract-pdf-text";
 import { EditPdfMetadata } from "./edit-pdf-metadata";
 import { CompressPdf } from "./compress-pdf";
 import { PdfEditor } from "./pdf-editor";
+import { PunjabRegistryEstimator } from "./punjab-registry-estimator";
 
 /**
  * The tool registry: one line per working tool.
@@ -49,4 +50,5 @@ export const TOOL_COMPONENTS: Record<string, ComponentType> = {
   "edit-pdf-metadata": EditPdfMetadata,
   "compress-pdf": CompressPdf,
   "edit-pdf": PdfEditor,
+  "punjab-registry-estimator": PunjabRegistryEstimator,
 };

@@ -767,6 +767,43 @@ export const TOOLS: ToolDef[] = [
     ],
   },
   {
+    id: "punjab-registry-estimator",
+    name: "Punjab Registry Estimator",
+    short:
+      "Punjab property registry fee calculator — estimate stamp duty, PLRA, mutation and FBR taxes (236K/236C) before you register. Free, private, English & اردو.",
+    tagline: "Registry costs before you reach the sub-registrar.",
+    category: "calc",
+    icon: "landmark",
+    keywords:
+      "punjab registry calculator registry fee calculator pakistan stamp duty calculator punjab property registry fees stamp duty 1 percent plra fee mutation fee intkaal registry expenses property transfer charges punjab registry cost estimator fbr 236k 236c filer non filer buyer seller withholding tax gift deed registry charges legal heir gift registry fee fard moqa kanal marla calculator registry area to value registry estimate urdu registry calculator zameen registry fees",
+    intro:
+      "Know your registry bill before you reach the sub-registrar. Enter the land and construction values (or let the built-in kanal/marla area calculator do it from the plot size and your rate), pick urban or rural, conveyance or gift, and list every buyer and seller with their share and filer status. The estimator then breaks down the complete 32-A challan — stamp duty, district council fee, PLRA fee, BOR, mutation — plus each person's FBR withholding (236K for buyers, 236C for sellers) at their exact filer or non-filer rate, the other expenses you add yourself, and how much a non-filer would save by becoming a filer. Special cases are covered: a rural gift to a legal heir gets the reduced flat-fee treatment, and FBR taxes are skipped where the law skips them. Every rate lives in one editable file and the results always show the effective date. It works in English and اردو, exports to PDF, image, print or WhatsApp with your own firm header — and like every FreeSeak tool, it runs entirely on your device.",
+    howTo: [
+      "Enter the land value and construction value — or click the ruler button and convert the plot from kanals and marlas at your rate per marla.",
+      "Choose urban or rural, conveyance or gift deed, and constructed or non-constructed property; for gifts, say whether the receiver is a legal heir.",
+      "List buyers and sellers with each person's share percentage and filer status — taxes are calculated per person, exactly as FBR charges them.",
+      "Press Calculate for the full breakdown, then export it as a branded PDF, image or print sheet, send it on WhatsApp, or save it to history.",
+    ],
+    faq: [
+      {
+        q: "How is stamp duty calculated in Punjab?",
+        a: "For a constructed property it is 1% of the total value plus 2% of the land value, plus a small base fee (Rs. 500 up to Rs. 5 lakh, Rs. 1,000 above). Non-constructed property pays 1% of the total value plus the same base fee. A gift of rural land to a legal heir is the special case: a flat Rs. 1,000 stamp duty with the mutation-side fees waived.",
+      },
+      {
+        q: "What are the FBR taxes 236K and 236C?",
+        a: "They are the advance (withholding) income taxes on property transfers: section 236K is charged from the buyer and 236C from the seller, at different rates for filers and non-filers. This calculator applies them per person, on each person's exact share of the property value — the way they are actually charged — and shows how much each side would save by being a filer. Gifts to legal heirs are exempt from these taxes, and the estimator applies that exemption automatically.",
+      },
+      {
+        q: "Are the estimates exact?",
+        a: "They are careful estimates based on the rates shown next to every result (currently effective July 2026), not a substitute for the sub-registrar's office. Actual challans can differ with district council variations, DC-rate assessments and rounding at the counter — always confirm the final figures with your sub-registrar or PLRA office before transacting.",
+      },
+      {
+        q: "Does the calculator work in Urdu?",
+        a: "Yes — toggle to اردو at the top of the tool and the entire interface switches, rendered in proper Nastaliq (Jameel Noori Nastaleeq, loaded only when you need it). PDF, image, print and WhatsApp exports come out in whichever language you are using, with your firm's name and details on the header if you set them in My Profile.",
+      },
+    ],
+  },
+  {
     id: "qr-generator",
     name: "QR Code Generator",
     short:
