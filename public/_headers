@@ -10,10 +10,3 @@
   Cache-Control: public, max-age=86400
 /og/*
   Cache-Control: public, max-age=86400
-
-# v0.9: the editor's Unicode font pack and OCR engine are large, immutable
-# static assets (lazy-loaded once, then cached by the browser).
-/fonts/*
-  Cache-Control: public, max-age=31536000, immutable
-/ocr/*
-  Cache-Control: public, max-age=31536000, immutable
