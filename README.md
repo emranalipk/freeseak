@@ -3,10 +3,13 @@
 Free online tools that run entirely in your browser. No sign-up, no uploads —
 your files never leave your device.
 
-**17 tools live:** PDF suite (Merge · Split · Images to PDF · PDF to Images ·
+**21 tools live:** PDF suite (Merge · Split · Images to PDF · PDF to Images ·
 Organize Pages · Page Numbers · Watermark · Extract Text · Metadata ·
-Compress) · QR Code Generator · Word Counter · Percentage Calculator ·
-Age Calculator · Image Compressor · Image Resizer · Enhance Image
+Compress · **Edit PDF** — the visual editor with on-device OCR, signatures,
+forms and password-protected file support) · QR Code Generator · Word
+Counter · Percentage Calculator · Age Calculator · Image Compressor ·
+Image Resizer · Enhance Image · Image Converter · Crop & Rotate ·
+Favicon Generator
 
 Built with Next.js (static export), Tailwind CSS and shadcn/ui, deployed on
 Cloudflare Workers. See [CHANGELOG.md](CHANGELOG.md) for what shipped and
