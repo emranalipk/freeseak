@@ -144,21 +144,22 @@
 .thin-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
-/* the editing surface: page canvas with a soft drop shadow */
-.page-canvas {
-  box-shadow:
-    0 1px 2px rgb(16 22 38 / 0.08),
-    0 12px 32px -8px rgb(16 22 38 / 0.25);
-}
 
-/* selection handles on annotation objects */
-.sel-handle {
+/* v0.9.1: torn-paper bottom edge under the homepage receipt card.
+   The receipt is always white paper (in both themes), so the teeth
+   are white too — drawn with two 45° gradients, no image needed. */
+.receipt-tear {
+  position: relative;
+}
+.receipt-tear::after {
+  content: "";
   position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  background: var(--primary);
-  border: 2px solid #fff;
-  box-shadow: 0 1px 3px rgb(16 22 38 / 0.35);
-  touch-action: none;
+  left: 0;
+  right: 0;
+  bottom: -9px;
+  height: 10px;
+  background:
+    linear-gradient(135deg, #ffffff 55%, transparent 55%) 0 0 / 14px 10px,
+    linear-gradient(45deg, transparent 45%, #ffffff 45%) 0 0 / 14px 10px;
+  background-repeat: repeat-x;
 }

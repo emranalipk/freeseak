@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     absolute: "Free Private Online Tools — No Uploads, No Sign-Up | FreeSeak",
   },
   description:
-    "Free, privacy-first tools that run entirely in your browser. Compress images, generate QR codes, and more — no files uploaded, no account needed. Built by Bluefrog.",
+    "Free PDF, image and quick tools that run entirely in your browser — edit, merge, split and compress, with no uploads and no account. Built by Bluefrog.",
   alternates: { canonical: "/" },
 };
 

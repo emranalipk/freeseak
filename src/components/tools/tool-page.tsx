@@ -20,6 +20,12 @@ import { recordVisit } from "@/lib/tool-store";
 import { TOOL_COMPONENTS } from "./tool-registry";
 
 /**
+ * v0.9.1 — canvas-heavy tools open edge-to-edge (the old 880px cap
+ * cramped the editor); every other tool gets a wider 1160px column.
+ */
+const FULL_BLEED = new Set(["edit-pdf", "organize-pdf-pages", "pdf-to-images"]);
+
+/**
  * The full standalone page for ONE tool — the v0.2 replacement for
  * the popup overlay. Renders the tool itself plus its how-to guide,
  * FAQ and related tools, so every tool has a shareable URL that
@@ -85,8 +91,18 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
     ],
   };
 
+  const full = FULL_BLEED.has(tool.id);
+
   return (
-    <div className="mx-auto w-full max-w-[880px] px-4 py-6 sm:px-6 sm:py-8">
+    <div
+      className={`w-full px-4 py-6 sm:px-6 sm:py-8 ${
+        full ? "" : "mx-auto max-w-[1160px]"
+      }`}
+    >
+      {/* v0.9.1: on full-bleed pages the chrome (breadcrumb, header,
+          how-to, FAQ) keeps a readable 880px measure; only the tool
+          itself spans the screen */}
+      <div className={full ? "mx-auto w-full max-w-[880px]" : undefined}>
       {/* breadcrumb */}
       <nav aria-label="Breadcrumb">
         <ol className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-muted-foreground">
@@ -139,12 +155,14 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
           </span>
         </div>
       </header>
+      </div>
 
       {/* the tool itself */}
       <section className="mt-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         {ToolComponent ? <ToolComponent /> : null}
       </section>
 
+      <div className={full ? "mx-auto w-full max-w-[880px]" : undefined}>
       {/* how to use */}
       {tool.howTo && tool.howTo.length > 0 && (
         <section className="mt-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
@@ -224,6 +242,7 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
         <p className="mt-2.5 text-[11.5px] font-semibold text-muted-foreground/70">
           Built by {OPERATOR_NAME} — {OPERATOR_EXPERIENCE}
         </p>
+      </div>
       </div>
 
       {[faqJsonLd, webAppJsonLd, breadcrumbJsonLd].map((ld, i) =>

@@ -21,7 +21,7 @@ import { WatermarkPdf } from "./watermark-pdf";
 import { ExtractPdfText } from "./extract-pdf-text";
 import { EditPdfMetadata } from "./edit-pdf-metadata";
 import { CompressPdf } from "./compress-pdf";
-import { EditPdf } from "./edit-pdf";
+import { PdfEditor } from "./pdf-editor";
 
 /**
  * The tool registry: one line per working tool.
@@ -48,5 +48,5 @@ export const TOOL_COMPONENTS: Record<string, ComponentType> = {
   "extract-pdf-text": ExtractPdfText,
   "edit-pdf-metadata": EditPdfMetadata,
   "compress-pdf": CompressPdf,
-  "edit-pdf": EditPdf,
+  "edit-pdf": PdfEditor,
 };

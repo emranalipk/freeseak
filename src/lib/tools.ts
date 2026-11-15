@@ -39,6 +39,8 @@ export interface ToolDef {
   id: string;
   name: string;
   short: string;
+  /** v0.9.1: one-line pitch for the homepage index rows (falls back to short) */
+  tagline?: string;
   category: CategoryId;
   /** lucide icon key, see components/site/tool-icon.tsx */
   icon: string;
@@ -66,10 +68,55 @@ export const CATEGORY_LABEL: Record<CategoryId, string> = {
 
 export const TOOLS: ToolDef[] = [
   {
+    id: "edit-pdf",
+    name: "Edit PDF",
+    short:
+      "Edit PDF files free online — add real text, sign, white-out, highlight, draw, stamp images, fill forms, OCR scans. No sign-up, nothing uploaded.",
+    tagline: "Rewrite text, sign, redact — even OCR a scanned page.",
+    category: "pdf",
+    icon: "pen",
+    keywords:
+      "edit pdf pdf editor add text to pdf write on pdf sign pdf fill pdf form white out pdf redact pdf cover text pdf highlight pdf draw on pdf annotate pdf add signature to pdf insert image into pdf stamp pdf edit scanned pdf ocr pdf type on pdf free pdf editor no sign up pdf editor no upload",
+    intro:
+      "The missing piece of the suite: a real editing workspace. Add text that becomes genuine, selectable PDF text in any Unicode font (Chinese, Cyrillic, Greek included), draw or upload a signature, cover anything with white-out, highlight, draw shapes and freehand notes, stamp images, and fill PDF forms. The honest truth about editing existing text: PDF has no word processor inside, so text is covered with white-out and replaced — and when it matters, one tick flattens pages to images so redactions are truly gone. Scanned pages are no dead end either: the built-in OCR reads printed English right on your device and turns it into editable text boxes. Everything runs in your browser; nothing is uploaded.",
+    howTo: [
+      "Drop in your PDF — every page appears in the workspace, ready to edit.",
+      "Pick a tool — Text, Sign, White-out, Highlight, Draw, shapes, Image, Form or OCR — and click or drag on the page. Select anything to move, resize, restyle or delete it.",
+      "Press Export edited PDF — tick “Flatten every page to an image” first if you are redacting sensitive content or want a tamper-proof copy.",
+    ],
+    faq: [
+      {
+        q: "Can this editor change the text that is already in my PDF?",
+        a: "It edits honestly, the way PDF actually works: there is no word processor inside the PDF format, so the tool covers existing text with a white box and you type the replacement on top. What you add is real PDF text — selectable, searchable, and it survives copies.",
+      },
+      {
+        q: "How do I sign a PDF online for free?",
+        a: "Open your PDF, press Sign, draw your signature with mouse, finger or stylus, and it lands on the page as a transparent PNG you can drag and resize onto the signature line. It happens entirely on your device — the signed document never leaves your computer.",
+      },
+      {
+        q: "Is the white-out safe for redacting confidential information?",
+        a: "White-out visually covers content. For absolute certainty — redacting secrets that must be unrecoverable — tick “Flatten every page to an image” when exporting: edited pages are rasterised, so the covered content is physically removed from the file instead of hiding underneath a white box.",
+      },
+      {
+        q: "What does the OCR tool do here?",
+        a: "It reads printed English text out of scanned pages — on your device, powered by a local recognition engine that loads once (~10 MB, cached) and then works offline. Each recognised line becomes an editable text box at its original position, so a scan finally turns into a PDF you can correct and reuse.",
+      },
+      {
+        q: "Can I edit a password-protected PDF?",
+        a: "Yes, with the password — type it once and the editor opens the file on your device; annotate, sign and white-out as usual. Because a protected file's content cannot be rewritten, the export rebuilds each page as a high-quality image with your edits burned in: visually identical, no longer text-selectable.",
+      },
+      {
+        q: "Which languages can I type in?",
+        a: "The standard fonts cover Latin-1 (English and most Western European languages). Pick Noto Sans in the Style panel for Polish, Turkish, Czech, Cyrillic, Greek or Chinese — and at export, any text the standard fonts cannot encode is switched to Noto automatically, so nothing comes out as boxes or gibberish.",
+      },
+    ],
+  },
+  {
     id: "merge-pdf",
     name: "Merge PDF",
     short:
       "Merge PDF files free online — combine any number of PDFs into one document, set the order visually, download instantly. No sign-up, nothing uploaded.",
+    tagline: "Stitch any number of files into one, in your order.",
     category: "pdf",
     icon: "merge",
     keywords:
@@ -105,6 +152,7 @@ export const TOOLS: ToolDef[] = [
     name: "Split PDF",
     short:
       "Split PDF free online — extract chosen pages into a new PDF, or break a document into separate files per page or range. No sign-up, nothing uploaded.",
+    tagline: "Pull the pages you need or cut one file into many.",
     category: "pdf",
     icon: "split",
     keywords:
@@ -140,6 +188,7 @@ export const TOOLS: ToolDef[] = [
     name: "Images to PDF",
     short:
       "Convert JPG and PNG images to one PDF free — drag, drop, reorder, and pick fit-to-image, A4 or Letter pages. No sign-up, nothing uploaded.",
+    tagline: "Photos in, one tidy document out.",
     category: "pdf",
     icon: "file-image",
     keywords:
@@ -175,6 +224,7 @@ export const TOOLS: ToolDef[] = [
     name: "PDF to Images",
     short:
       "Convert PDF pages to PNG or JPG images free — pick the resolution up to print quality, download one page or all. No sign-up, nothing uploaded.",
+    tagline: "Every page as a clean PNG or JPG.",
     category: "pdf",
     icon: "images",
     keywords:
@@ -210,6 +260,7 @@ export const TOOLS: ToolDef[] = [
     name: "Organize PDF Pages",
     short:
       "Reorder, rotate and delete PDF pages visually — drag live page thumbnails into place and save. Free PDF organizer, no sign-up, nothing uploaded.",
+    tagline: "Drag, rotate, delete — reorder in seconds.",
     category: "pdf",
     icon: "layout",
     keywords:
@@ -245,6 +296,7 @@ export const TOOLS: ToolDef[] = [
     name: "Add Page Numbers",
     short:
       "Add page numbers to a PDF free — any corner, “Page 3 of 12” styles, custom start number, cover-page skip. No sign-up, nothing uploaded.",
+    tagline: "4 formats, 6 positions, start anywhere.",
     category: "pdf",
     icon: "ordered",
     keywords:
@@ -280,6 +332,7 @@ export const TOOLS: ToolDef[] = [
     name: "Watermark PDF",
     short:
       "Add a text watermark to a PDF free — DRAFT or CONFIDENTIAL at any angle, colour and opacity, with a live preview. No sign-up, nothing uploaded.",
+    tagline: "Stamp text across every page — tiled, live preview.",
     category: "pdf",
     icon: "stamp",
     keywords:
@@ -315,6 +368,7 @@ export const TOOLS: ToolDef[] = [
     name: "Extract PDF Text",
     short:
       "Extract text from a PDF free — pull the words out of any text-based PDF into a clean .txt file, in your browser. Nothing is uploaded.",
+    tagline: "Copy the words out — scanned ones too, with OCR.",
     category: "pdf",
     icon: "scan",
     keywords:
@@ -350,6 +404,7 @@ export const TOOLS: ToolDef[] = [
     name: "Edit PDF Metadata",
     short:
       "View and edit PDF metadata free — change the title, author, subject and keywords, or scrub them all before sharing. No sign-up, nothing uploaded.",
+    tagline: "Title, author, keywords — or scrub them clean.",
     category: "pdf",
     icon: "tags",
     keywords:
@@ -385,6 +440,7 @@ export const TOOLS: ToolDef[] = [
     name: "Compress PDF",
     short:
       "Compress PDF files free — safe lossless mode, or strong mode with honest before/after sizes and no quality surprises. No sign-up, nothing uploaded.",
+    tagline: "Safe and strong modes — never worse than the original.",
     category: "pdf",
     icon: "archive",
     keywords:
@@ -416,181 +472,11 @@ export const TOOLS: ToolDef[] = [
     ],
   },
   {
-    id: "edit-pdf",
-    name: "Edit PDF",
-    short:
-      "Edit PDF files free online — add real text in any language, double-click to retype existing text, sign, white-out, highlight, fill forms, read scans with OCR. No sign-up, nothing uploaded.",
-    category: "pdf",
-    icon: "pen",
-    keywords:
-      "edit pdf pdf editor add text to pdf write on pdf sign pdf fill pdf form white out pdf redact pdf cover text pdf highlight pdf draw on pdf annotate pdf add signature to pdf insert image into pdf stamp pdf edit scanned pdf ocr pdf type on pdf retype pdf pdf editor no upload free pdf editor no sign up",
-    intro:
-      "The flagship the suite was missing: a real editing workspace. All pages scroll continuously like a document viewer — click to add text that becomes genuine, selectable PDF text in 13 font families (Noto covers Chinese, Cyrillic, Greek and more), double-click any existing line to retype it, draw or upload a signature, cover anything with a variable-width white-out brush, highlight, draw shapes, stamp images, and fill PDF forms. Scanned pages are no dead end: the built-in OCR reads printed English right on your device and turns it into editable text boxes — and password-protected files open with their password. The honest truth about editing existing text: PDF has no word processor inside, so text is covered and replaced — and when it matters, one tick flattens pages to images so redactions are truly gone. Everything runs in your browser; nothing is uploaded.",
-    howTo: [
-      "Drop in your PDF — every page appears in one continuous workspace, ready to edit.",
-      "Pick a tool — Text, Sign, White-out, Highlight, Draw, shapes, Image, Forms or OCR — and click or drag on the page. Double-click existing text to retype it; select anything to move, resize, restyle or delete it.",
-      "Press Export — added text stays real, selectable PDF text. Tick “Flatten every page to an image” when redacting sensitive content or you want a tamper-proof copy.",
-    ],
-    faq: [
-      {
-        q: "Can this editor change the text that is already in my PDF?",
-        a: "Yes — double-click any line with the Select tool: the original is covered automatically and your editable copy drops on top at the same size; one undo removes both. It edits honestly, the way PDF actually works — there is no word processor inside the PDF format, so nothing reflows. What you add is real PDF text — selectable, searchable, and it survives copies.",
-      },
-      {
-        q: "How do I sign a PDF online for free?",
-        a: "Open your PDF, press Sign, draw your signature with mouse, finger or stylus, and it lands on the page as a transparent image you can drag and resize onto the signature line. It happens entirely on your device — the signed document never leaves your computer.",
-      },
-      {
-        q: "Is the white-out safe for redacting confidential information?",
-        a: "White-out visually covers content. For absolute certainty — redacting secrets that must be unrecoverable — tick “Flatten every page to an image” when exporting: edited pages are rasterised, so the covered content is physically removed from the file instead of hiding underneath a white box.",
-      },
-      {
-        q: "What does the OCR tool do here?",
-        a: "It reads printed English text out of scanned pages — on your device, powered by a local recognition engine that loads once (~10 MB, cached) and then works offline. Each recognised line becomes an editable text box at its original position, so a scan finally turns into a PDF you can correct and reuse. OCR is English-only, and the tool says so — no pretending.",
-      },
-      {
-        q: "Can I edit a password-protected PDF?",
-        a: "Yes — type the password once and the editor opens the file on your device; annotate, sign and white-out as usual. Because a protected file's content cannot be rewritten, the export rebuilds each page as a high-quality image with your edits burned in: visually identical, no longer text-selectable.",
-      },
-      {
-        q: "Which languages can I type in?",
-        a: "The 12 standard PDF fonts cover English and most Western European languages. Pick Noto Sans for Polish, Turkish, Czech, Cyrillic, Greek or Chinese — 8 more open-licensed families (Inter, Roboto, Caveat and friends) are there for looks, and at export any text a font can't encode switches to Noto automatically, so nothing comes out as boxes or gibberish.",
-      },
-    ],
-  },
-  {
-    id: "qr-generator",
-    name: "QR Code Generator",
-    short:
-      "Free online QR code generator for links, text and Wi-Fi. Download as PNG or SVG in print quality — no sign-up, no watermark, no expiry.",
-    category: "prod",
-    icon: "qr",
-    keywords:
-      "qr code generator free qr code generator make a qr code create qr code online qr maker wifi qr code qr code for a link url qr code png svg download no watermark no sign up static qr code qr code for menu business card",
-    intro:
-      "Create a free QR code in seconds. Type a link, plain text or Wi-Fi details, watch the QR code build itself live, and download it in print quality as a PNG or a scalable SVG. Everything is generated on your device — no sign-up, no watermark, and no expiry: these are static QR codes, so the data is encoded directly into the image and works forever, even offline.",
-    howTo: [
-      "Type or paste the link, text or Wi-Fi details you want to encode.",
-      "Pick a size and error-correction level, and set your colours — the preview updates as you go.",
-      "Download your QR code as a PNG for quick use, or an SVG for perfect print quality at any size.",
-    ],
-    faq: [
-      {
-        q: "Is this QR code generator really free?",
-        a: "Yes — unlimited codes, unlimited downloads, no account, no watermark. FreeSeak tools run in your browser, so generating a QR code costs nothing to serve.",
-      },
-      {
-        q: "Do the QR codes I create ever expire?",
-        a: "Never. These are static QR codes — the content is encoded directly into the image, so there is no server that could go away. A code you print today still works in ten years.",
-      },
-      {
-        q: "What is the difference between static and dynamic QR codes?",
-        a: "A static QR code encodes your text or link directly into the image — it works forever but cannot be changed afterwards. A dynamic QR code points at a redirect service that can be updated, but it stops working the day that service shuts down. FreeSeak generates static codes: what you print is what it does, permanently.",
-      },
-      {
-        q: "Can I use the codes commercially?",
-        a: "Yes. QR codes you generate are yours — use them on business cards, menus, packaging or posters with no restrictions.",
-      },
-    ],
-  },
-  {
-    id: "word-counter",
-    name: "Word Counter",
-    short:
-      "Free online word counter — words, characters, sentences and reading time update live as you type. No sign-up, no limits, nothing uploaded.",
-    category: "prod",
-    icon: "type",
-    keywords:
-      "word counter word count character counter count characters online sentence counter paragraph counter reading time essay word limit twitter character count meta description length blog post length",
-    intro:
-      "Paste or type your text and watch words, characters, sentences, paragraphs and reading time update instantly. Handy for essays with word limits, tweets and social posts, meta descriptions, cover letters and articles — and your text is counted entirely in your browser, so it never leaves the page.",
-    howTo: [
-      "Type or paste your text into the box.",
-      "Watch every number update live as you edit — words, characters with and without spaces, sentences, paragraphs and reading time.",
-      "Use Clear to start over — nothing is stored anywhere.",
-    ],
-    faq: [
-      {
-        q: "Is my text uploaded anywhere?",
-        a: "No. Counting happens in your browser as you type. Close the tab and everything is gone — there is no server copy, ever.",
-      },
-      {
-        q: "How is reading time calculated?",
-        a: "At an average silent-reading pace of 200 words per minute, which is the standard used by most publishers.",
-      },
-      {
-        q: "How many characters fit in a tweet or a meta description?",
-        a: "A post on X (Twitter) allows 280 characters. A meta description is typically kept to about 150-160 characters before search engines truncate it. The characters-without-spaces counter above helps you fit both.",
-      },
-    ],
-  },
-  {
-    id: "percentage-calculator",
-    name: "Percentage Calculator",
-    short:
-      "Free percentage calculator: X% of Y, what percent one number is of another, and percentage increase or decrease. Instant, no sign-up.",
-    category: "calc",
-    icon: "percent",
-    keywords:
-      "percentage calculator percent of a number what percent of percentage change percentage difference percentage increase decrease calculator percent off discount calculator sale price tip calculator percent formula",
-    intro:
-      "The three percentage questions everyone has, answered instantly: what is X% of Y, X is what percent of Y, and how big is the percentage change from X to Y. Discounts, tips, price rises, exam scores, growth figures — type two numbers and read the answer. No formulas to remember, no calculate button.",
-    howTo: [
-      "Pick the card that matches your question — all three are on the page.",
-      "Type your two numbers.",
-      "Read the answer — it updates as you type.",
-    ],
-    faq: [
-      {
-        q: "How do I calculate a discount or sale price?",
-        a: "Use the first card: enter the discount as the percentage and the original price as the number — the result is how much you save. Subtract it from the price for the sale price.",
-      },
-      {
-        q: "How do I calculate percentage change?",
-        a: "Percentage change = (new − old) ÷ |old| × 100. The third card does it for you: enter the old value and the new value. A positive result is an increase, a negative one a decrease.",
-      },
-      {
-        q: "What is percentage difference good for?",
-        a: "Price rises, salary changes, growth figures, exam score changes — any before/after comparison where you want the size of the change relative to where you started.",
-      },
-    ],
-  },
-  {
-    id: "age-calculator",
-    name: "Age Calculator",
-    short:
-      "Free online age calculator — your exact age in years, months and days, plus a countdown to your next birthday. No sign-up, private.",
-    category: "calc",
-    icon: "cake",
-    keywords:
-      "age calculator how old am i calculate age in months and days age in years months days days until my next birthday birthday countdown date of birth age difference chronological age school admission age exact age",
-    intro:
-      "Enter a date of birth and get the exact age in years, months and days — plus a countdown to the next birthday, with the day of the week it falls on. Precise enough for official forms, school admissions and visa applications that ask for exact age, and it handles leap-year birthdays correctly.",
-    howTo: [
-      "Pick the date of birth.",
-      "Read the exact age in years, months and days.",
-      "Check the line below for how long until the next birthday.",
-    ],
-    faq: [
-      {
-        q: "Which birthdays does it count correctly?",
-        a: "All of them — including leap-year babies: February 29 is handled explicitly, and ages are computed with real calendar month lengths.",
-      },
-      {
-        q: "Why do forms ask for age in years, months and days?",
-        a: "School admissions, visas and some medical forms require exact age on a specific date. This calculator gives you that number for today.",
-      },
-      {
-        q: "How does it handle February 29 birthdays?",
-        a: "In non-leap years the next birthday is counted on February 28, the last day of the birthday month — the convention most official forms use.",
-      },
-    ],
-  },
-  {
     id: "compress-image",
     name: "Compress Image",
     short:
       "Compress JPG, PNG and WebP images free — pick a quality or an exact target size like 100 KB. No sign-up, no limits, nothing uploaded.",
+    tagline: "Hit an exact KB target, no visible loss.",
     category: "image",
     icon: "image-down",
     keywords:
@@ -627,6 +513,7 @@ export const TOOLS: ToolDef[] = [
     name: "Resize Image",
     short:
       "Resize images to exact dimensions, a percentage, or social media sizes like Instagram — and convert JPG, PNG, WebP. Free, private.",
+    tagline: "Exact pixels, ratios or social presets.",
     category: "image",
     icon: "scaling",
     keywords:
@@ -663,6 +550,7 @@ export const TOOLS: ToolDef[] = [
     name: "Enhance Image",
     short:
       "Enhance and upscale photos free in your browser — denoise, sharpen, fix colors and exposure, upscale 2× / 4×. No sign-up, nothing uploaded.",
+    tagline: "Denoise, sharpen, fix colours — upscale 2× or 4×.",
     category: "image",
     icon: "sparkles",
     keywords:
@@ -708,6 +596,7 @@ export const TOOLS: ToolDef[] = [
     name: "Image Converter",
     short:
       "Convert images free online — JPG to PNG, PNG to JPG, WebP and AVIF, one file or a whole batch. No sign-up, nothing uploaded.",
+    tagline: "JPG, PNG, WebP, AVIF — one file or a batch.",
     category: "image",
     icon: "repeat",
     keywords:
@@ -744,6 +633,7 @@ export const TOOLS: ToolDef[] = [
     name: "Crop & Rotate Image",
     short:
       "Crop images free online — drag a box, lock an aspect ratio like 1:1 or 16:9, rotate and flip, download at full resolution. Nothing uploaded.",
+    tagline: "Drag a box, lock a ratio, rotate and flip.",
     category: "image",
     icon: "crop",
     keywords:
@@ -780,6 +670,7 @@ export const TOOLS: ToolDef[] = [
     name: "Favicon Generator",
     short:
       "Generate a complete favicon pack free — one image in, get favicon.ico, PNG icons, apple-touch-icon, a webmanifest and the HTML. No uploads.",
+    tagline: "One image in — a complete icon pack out.",
     category: "image",
     icon: "globe",
     keywords:
@@ -808,6 +699,138 @@ export const TOOLS: ToolDef[] = [
       {
         q: "Is my logo uploaded anywhere?",
         a: "No. The icons, the .ico file, the manifest and the zip are all built inside your browser — your logo never leaves your device.",
+      },
+    ],
+  },
+  {
+    id: "percentage-calculator",
+    name: "Percentage Calculator",
+    short:
+      "Free percentage calculator: X% of Y, what percent one number is of another, and percentage increase or decrease. Instant, no sign-up.",
+    tagline: "Percent of a number, what % it is, and how it changed.",
+    category: "calc",
+    icon: "percent",
+    keywords:
+      "percentage calculator percent of a number what percent of percentage change percentage difference percentage increase decrease calculator percent off discount calculator sale price tip calculator percent formula",
+    intro:
+      "The three percentage questions everyone has, answered instantly: what is X% of Y, X is what percent of Y, and how big is the percentage change from X to Y. Discounts, tips, price rises, exam scores, growth figures — type two numbers and read the answer. No formulas to remember, no calculate button.",
+    howTo: [
+      "Pick the card that matches your question — all three are on the page.",
+      "Type your two numbers.",
+      "Read the answer — it updates as you type.",
+    ],
+    faq: [
+      {
+        q: "How do I calculate a discount or sale price?",
+        a: "Use the first card: enter the discount as the percentage and the original price as the number — the result is how much you save. Subtract it from the price for the sale price.",
+      },
+      {
+        q: "How do I calculate percentage change?",
+        a: "Percentage change = (new − old) ÷ |old| × 100. The third card does it for you: enter the old value and the new value. A positive result is an increase, a negative one a decrease.",
+      },
+      {
+        q: "What is percentage difference good for?",
+        a: "Price rises, salary changes, growth figures, exam score changes — any before/after comparison where you want the size of the change relative to where you started.",
+      },
+    ],
+  },
+  {
+    id: "age-calculator",
+    name: "Age Calculator",
+    short:
+      "Free online age calculator — your exact age in years, months and days, plus a countdown to your next birthday. No sign-up, private.",
+    tagline: "Exact years, months and days.",
+    category: "calc",
+    icon: "cake",
+    keywords:
+      "age calculator how old am i calculate age in months and days age in years months days days until my next birthday birthday countdown date of birth age difference chronological age school admission age exact age",
+    intro:
+      "Enter a date of birth and get the exact age in years, months and days — plus a countdown to the next birthday, with the day of the week it falls on. Precise enough for official forms, school admissions and visa applications that ask for exact age, and it handles leap-year birthdays correctly.",
+    howTo: [
+      "Pick the date of birth.",
+      "Read the exact age in years, months and days.",
+      "Check the line below for how long until the next birthday.",
+    ],
+    faq: [
+      {
+        q: "Which birthdays does it count correctly?",
+        a: "All of them — including leap-year babies: February 29 is handled explicitly, and ages are computed with real calendar month lengths.",
+      },
+      {
+        q: "Why do forms ask for age in years, months and days?",
+        a: "School admissions, visas and some medical forms require exact age on a specific date. This calculator gives you that number for today.",
+      },
+      {
+        q: "How does it handle February 29 birthdays?",
+        a: "In non-leap years the next birthday is counted on February 28, the last day of the birthday month — the convention most official forms use.",
+      },
+    ],
+  },
+  {
+    id: "qr-generator",
+    name: "QR Code Generator",
+    short:
+      "Free online QR code generator for links, text and Wi-Fi. Download as PNG or SVG in print quality — no sign-up, no watermark, no expiry.",
+    tagline: "Turn any link or text into a scannable code.",
+    category: "prod",
+    icon: "qr",
+    keywords:
+      "qr code generator free qr code generator make a qr code create qr code online qr maker wifi qr code qr code for a link url qr code png svg download no watermark no sign up static qr code qr code for menu business card",
+    intro:
+      "Create a free QR code in seconds. Type a link, plain text or Wi-Fi details, watch the QR code build itself live, and download it in print quality as a PNG or a scalable SVG. Everything is generated on your device — no sign-up, no watermark, and no expiry: these are static QR codes, so the data is encoded directly into the image and works forever, even offline.",
+    howTo: [
+      "Type or paste the link, text or Wi-Fi details you want to encode.",
+      "Pick a size and error-correction level, and set your colours — the preview updates as you go.",
+      "Download your QR code as a PNG for quick use, or an SVG for perfect print quality at any size.",
+    ],
+    faq: [
+      {
+        q: "Is this QR code generator really free?",
+        a: "Yes — unlimited codes, unlimited downloads, no account, no watermark. FreeSeak tools run in your browser, so generating a QR code costs nothing to serve.",
+      },
+      {
+        q: "Do the QR codes I create ever expire?",
+        a: "Never. These are static QR codes — the content is encoded directly into the image, so there is no server that could go away. A code you print today still works in ten years.",
+      },
+      {
+        q: "What is the difference between static and dynamic QR codes?",
+        a: "A static QR code encodes your text or link directly into the image — it works forever but cannot be changed afterwards. A dynamic QR code points at a redirect service that can be updated, but it stops working the day that service shuts down. FreeSeak generates static codes: what you print is what it does, permanently.",
+      },
+      {
+        q: "Can I use the codes commercially?",
+        a: "Yes. QR codes you generate are yours — use them on business cards, menus, packaging or posters with no restrictions.",
+      },
+    ],
+  },
+  {
+    id: "word-counter",
+    name: "Word Counter",
+    short:
+      "Free online word counter — words, characters, sentences and reading time update live as you type. No sign-up, no limits, nothing uploaded.",
+    tagline: "Words, characters, sentences, reading time.",
+    category: "prod",
+    icon: "type",
+    keywords:
+      "word counter word count character counter count characters online sentence counter paragraph counter reading time essay word limit twitter character count meta description length blog post length",
+    intro:
+      "Paste or type your text and watch words, characters, sentences, paragraphs and reading time update instantly. Handy for essays with word limits, tweets and social posts, meta descriptions, cover letters and articles — and your text is counted entirely in your browser, so it never leaves the page.",
+    howTo: [
+      "Type or paste your text into the box.",
+      "Watch every number update live as you edit — words, characters with and without spaces, sentences, paragraphs and reading time.",
+      "Use Clear to start over — nothing is stored anywhere.",
+    ],
+    faq: [
+      {
+        q: "Is my text uploaded anywhere?",
+        a: "No. Counting happens in your browser as you type. Close the tab and everything is gone — there is no server copy, ever.",
+      },
+      {
+        q: "How is reading time calculated?",
+        a: "At an average silent-reading pace of 200 words per minute, which is the standard used by most publishers.",
+      },
+      {
+        q: "How many characters fit in a tweet or a meta description?",
+        a: "A post on X (Twitter) allows 280 characters. A meta description is typically kept to about 150-160 characters before search engines truncate it. The characters-without-spaces counter above helps you fit both.",
       },
     ],
   },

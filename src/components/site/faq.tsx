@@ -20,7 +20,7 @@ const FAQ = [
   },
   {
     q: "Which tools are coming next?",
-    a: "Six tools are live today: the QR Code Generator, Word Counter, Percentage Calculator, Age Calculator, Image Compressor and Image Resizer. Rather than promise a long roadmap, FreeSeak ships a tool when it is genuinely finished — missing something? Request it, and requests help decide what gets built.",
+    a: "Twenty-one tools are live today: the full PDF suite (Edit PDF, merge, split, organize, compress, watermark, page numbers, PDF↔images, text extraction, metadata), six image tools (compress, resize, enhance, convert, crop & rotate, favicon), plus the quick utilities — QR codes, word counting, percentages and age. Rather than promise a long roadmap, FreeSeak ships a tool when it is genuinely finished — missing something? Request it, and requests help decide what gets built.",
   },
 ];
 

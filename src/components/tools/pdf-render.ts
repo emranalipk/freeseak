@@ -59,6 +59,16 @@ export interface RenderedPage {
 }
 
 /**
+ * Tear down a document proxy. pdf.js v6's typings expose `destroy()` on
+ * the loading task rather than the proxy, so this calls it defensively —
+ * releasing the worker's memory matters in a long-lived editor tab.
+ */
+export function destroyPdfJsDoc(doc: PDFDocumentProxy): Promise<void> {
+  const maybe = (doc as unknown as { destroy?: () => Promise<void> }).destroy;
+  return maybe ? maybe.call(doc) : Promise.resolve();
+}
+
+/**
  * Render one page at `scale` (1 = 72 DPI, 2 = 144 DPI …). The canvas is
  * freshly created each time — the caller owns it (and its object URL).
  */
