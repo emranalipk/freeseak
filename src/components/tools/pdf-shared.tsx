@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useHandoff } from "@/lib/file-handoff";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,6 +57,12 @@ export function PdfDropZone({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+
+  /* v0.9.3: a PDF handed over from the homepage router opens here
+     automatically — the visitor drops once, never twice */
+  useHandoff((f) => {
+    if (isPdfFile(f)) onFiles([f]);
+  });
 
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {

@@ -5,7 +5,6 @@ import { WorkbenchHero } from "./workbench-hero";
 import { TryTools } from "./try-tools";
 import { RecentTools } from "./recent-tools";
 import { ToolIndex } from "./tool-index";
-import { WorkspaceShowcase } from "./workspace-showcase";
 import { AdSlot } from "./ad-slot";
 import { ManifestoBand } from "./manifesto-band";
 import { Faq } from "./faq";
@@ -14,7 +13,8 @@ import { TOOLS } from "@/lib/tools";
 /**
  * v0.9.1 — the Workbench homepage (concept v4, ported into the app):
  * promise → live proof → try it right here → the full numbered index →
- * the full-screen workspace story → the manifesto + receipt → FAQ.
+ * the manifesto + receipt → FAQ. (v0.9.3: the "new in this version"
+ * workspace showcase is gone — release notes live in CHANGELOG.md.)
  *
  * The hero command bar and the index share one query (lifted here), so
  * typing above filters the catalogue below — the search index, the
@@ -31,7 +31,6 @@ export function HomePage() {
       <TryTools />
       <RecentTools />
       <ToolIndex query={query} />
-      <WorkspaceShowcase />
       <AdSlot />
       <ManifestoBand />
       <Faq />

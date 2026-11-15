@@ -144,9 +144,11 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
           <h1 className="mt-0.5 font-display text-[22px] font-extrabold tracking-tight text-foreground sm:text-[26px]">
             {tool.name}
           </h1>
-          {tool.intro && (
+          {/* v0.9.3: the header keeps only the one-liner — the full
+              SEO intro moved below the tool, where reading belongs */}
+          {tool.short && (
             <p className="mt-2 max-w-[560px] text-[13.5px] leading-relaxed text-muted-foreground">
-              {tool.intro}
+              {tool.short}
             </p>
           )}
           <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-mint/45 bg-mint/5 px-3 py-1 text-[11.5px] font-semibold text-mint-deep dark:text-mint">
@@ -163,6 +165,20 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
       </section>
 
       <div className={full ? "mx-auto w-full max-w-[880px]" : undefined}>
+      {/* about — v0.9.3: the full intro moved below the tool. People
+          land here to DO something; the reading material follows the
+          doing (same text, same indexability for Google) */}
+      {tool.intro && (
+        <section className="mt-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <h2 className="font-display text-[15px] font-bold text-foreground">
+            About the {tool.name}
+          </h2>
+          <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
+            {tool.intro}
+          </p>
+        </section>
+      )}
+
       {/* how to use */}
       {tool.howTo && tool.howTo.length > 0 && (
         <section className="mt-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">

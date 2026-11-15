@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
+import { useHandoff } from "@/lib/file-handoff";
 
 /**
  * Shared input surface for the image tools: drag-and-drop, click-to-browse
@@ -17,6 +18,12 @@ export function ImageDropZone({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+
+  /* v0.9.3: an image handed over from the homepage router opens here
+     automatically — the visitor drops once, never twice */
+  useHandoff((f) => {
+    if (f.type.startsWith("image/")) onFiles([f]);
+  });
 
   /* pasted screenshots arrive straight from the clipboard */
   useEffect(() => {

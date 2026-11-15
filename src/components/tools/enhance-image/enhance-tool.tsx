@@ -42,6 +42,7 @@ import {
   scaleImageData,
   toImageData,
 } from '@/lib/enhance-image';
+import { useHandoff } from '@/lib/file-handoff';
 import { CompareSlider } from './compare-slider';
 
 interface LoadedState {
@@ -337,6 +338,12 @@ export function EnhanceTool() {
   useEffect(() => {
     loadFileRef.current = loadFile;
   }, [loadFile]);
+
+  /* v0.9.3: an image handed over from the homepage router opens here
+     automatically — the visitor drops once, never twice */
+  useHandoff((f) => {
+    void loadFileRef.current(f);
+  });
 
   const handleAutoTune = async () => {
     if (!loaded) return;

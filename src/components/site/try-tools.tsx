@@ -4,18 +4,22 @@ import { useState } from "react";
 import Link from "next/link";
 import { FileUp } from "lucide-react";
 import { getTool } from "@/lib/tools";
+import { useFileHandoff } from "@/lib/file-handoff";
 
 /**
  * v0.9.1 — "try one right here": the smart file router (name/type/size
  * only — never the contents) plus three real tools running live on the
  * page. Every suggestion is looked up in the catalogue, so a pill can
  * never link to a tool that does not exist.
+ *
+ * v0.9.3 — the router became a real handoff: the dropped file travels
+ * with the pill click, so the tool page opens with it already loaded.
  */
 
 const PDF_PICKS = [
-  "edit-pdf",
-  "compress-pdf",
   "merge-pdf",
+  "compress-pdf",
+  "edit-pdf",
   "split-pdf",
   "organize-pdf-pages",
   "extract-pdf-text",
@@ -25,7 +29,25 @@ const PDF_PICKS = [
   "edit-pdf-metadata",
 ];
 
-const IMAGE_PICKS = ["compress-image", "resize-image", "images-to-pdf"];
+/* v0.9.3: the complete image list — the old three entries predated
+   Enhance, Convert, Crop & Rotate and Favicon Generator, so half the
+   image suite never appeared as a suggestion */
+const IMAGE_PICKS = [
+  "compress-image",
+  "resize-image",
+  "enhance-image",
+  "convert-image",
+  "crop-image",
+  "images-to-pdf",
+  "favicon-generator",
+];
+
+/* a heavy PDF most likely wants compressing first */
+function pdfPicks(size: number): string[] {
+  return size > 8 * 1024 * 1024
+    ? ["compress-pdf", ...PDF_PICKS.filter((id) => id !== "compress-pdf")]
+    : PDF_PICKS;
+}
 
 function human(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -37,6 +59,7 @@ interface Dropped {
   name: string;
   size: number;
   kind: "pdf" | "image" | "other";
+  file: File;
 }
 
 function LiveTag() {
@@ -64,6 +87,7 @@ function TileHeading({ children }: { children: string }) {
 function FileRouter() {
   const [file, setFile] = useState<Dropped | null>(null);
   const [over, setOver] = useState(false);
+  const handOff = useFileHandoff((s) => s.handOff);
 
   const handle = (f: File | null | undefined) => {
     if (!f) return;
@@ -76,10 +100,11 @@ function FileRouter() {
       name: f.name,
       size: f.size,
       kind: isPdf ? "pdf" : isImg ? "image" : "other",
+      file: f,
     });
   };
 
-  const picks = (file?.kind === "pdf" ? PDF_PICKS : IMAGE_PICKS)
+  const picks = (file?.kind === "pdf" ? pdfPicks(file.size) : IMAGE_PICKS)
     .map((id) => getTool(id))
     .filter((t): t is NonNullable<typeof t> => !!t);
 
@@ -114,7 +139,7 @@ function FileRouter() {
           </span>
           <span className="mt-1.5 block text-[13px] text-muted-foreground">
             we read its name, type and size — locally — and point you to the
-            right tool
+            right tool, then carry your file along
           </span>
           <input
             type="file"
@@ -139,6 +164,7 @@ function FileRouter() {
                   <Link
                     key={t.id}
                     href={`/tools/${t.id}`}
+                    onClick={() => handOff(file.file, t.id)}
                     className={`rounded-full px-4 py-2.5 text-[13.5px] font-bold transition hover:-translate-y-px ${
                       i === 0
                         ? "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -149,6 +175,9 @@ function FileRouter() {
                   </Link>
                 ))}
               </div>
+              <p className="font-mono text-[12px] text-muted-foreground">
+                click a tool and it opens with your file — no second drop
+              </p>
             </>
           ) : (
             <p className="text-[19px] font-bold tracking-tight text-navy dark:text-[#CFE0FB]">
@@ -340,9 +369,9 @@ export function TryTools() {
           Try one right here.
         </h2>
         <p className="mt-3.5 max-w-[62ch] text-[15.5px] text-muted-foreground">
-          These are real tools running live on this page. Drop a file and
-          we’ll point you to the right one — or just type, calculate, count.
-          Your browser does all the work.
+          These are real tools running live on this page. Drop a file,
+          pick a tool and it opens with your file already loaded — or
+          just type, calculate, count. Your browser does all the work.
         </p>
 
         <div className="mt-9 grid gap-4 lg:grid-cols-3">
