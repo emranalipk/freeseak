@@ -64,6 +64,9 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     // v0.6: vendored enhance worker — a static asset written as plain
     // browser JS, not module code (same treatment as the pdf.js workers).
     "public/enhance-worker.js",
+    // v0.6 (editor lineage): vendored Tesseract.js OCR assets
+    // (worker + WASM cores) — minified vendor files served statically.
+    "public/ocr/**",
   ]
 }];
 
