@@ -8,6 +8,9 @@ import { AgeCalculator } from "./age-calculator";
 import { ImageCompressor } from "./image-compressor";
 import { ImageResizer } from "./image-resizer";
 import { EnhanceTool } from "./enhance-image/enhance-tool";
+import { ImageConverter } from "./convert-image";
+import { ImageCropper } from "./crop-image";
+import { FaviconGenerator } from "./favicon-generator";
 import { MergePdf } from "./merge-pdf";
 import { SplitPdf } from "./split-pdf";
 import { ImagesToPdf } from "./images-to-pdf";
@@ -31,6 +34,9 @@ export const TOOL_COMPONENTS: Record<string, ComponentType> = {
   "compress-image": ImageCompressor,
   "resize-image": ImageResizer,
   "enhance-image": EnhanceTool,
+  "convert-image": ImageConverter,
+  "crop-image": ImageCropper,
+  "favicon-generator": FaviconGenerator,
   "merge-pdf": MergePdf,
   "split-pdf": SplitPdf,
   "images-to-pdf": ImagesToPdf,

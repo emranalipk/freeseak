@@ -7,7 +7,8 @@
  * so the brand marker and the zip bundler live here exactly once.
  */
 
-export type OutputMime = "image/jpeg" | "image/png" | "image/webp";
+/** AVIF is encode-optional (Chromium only) — tools probe for it first */
+export type OutputMime = "image/jpeg" | "image/png" | "image/webp" | "image/avif";
 
 export type FormatChoice = "keep" | OutputMime;
 

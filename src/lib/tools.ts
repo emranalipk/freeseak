@@ -660,6 +660,114 @@ export const TOOLS: ToolDef[] = [
       },
     ],
   },
+  {
+    id: "convert-image",
+    name: "Image Converter",
+    short:
+      "Convert images free online — JPG to PNG, PNG to JPG, WebP and AVIF, one file or a whole batch. No sign-up, nothing uploaded.",
+    category: "image",
+    icon: "repeat",
+    keywords:
+      "convert image jpg to png png to jpg webp to jpg convert to webp change image format image converter online free batch convert images png to webp jpg to avif avif converter convert photo to png transform image format convert without uploading no sign up",
+    intro:
+      "Switch images between JPG, PNG, WebP and AVIF — one file or a whole batch at once. Need a photo as a PNG for a design tool? A WebP that every modern browser shows for a fraction of the size? An AVIF for the smallest possible file? Drop the images in, pick the format, set the quality for lossy formats and convert. JPG, PNG, WebP, GIF and BMP files can all come in; PNG and WebP keep transparency, and images converted to JPG get a clean white background where transparency used to be. Everything happens in your browser — nothing is uploaded, and the AVIF option only appears when your browser can genuinely encode it, so the tool never offers what it can't deliver.",
+    howTo: [
+      "Drop your images onto the page, click to browse, or paste them from the clipboard.",
+      "Pick the output format — JPG, PNG, WebP or AVIF (AVIF shows only in browsers that support it).",
+      "For JPG, WebP and AVIF, choose the quality with the slider; PNG is always lossless.",
+      "Press Convert and download your images — one by one or all at once as a zip.",
+    ],
+    faq: [
+      {
+        q: "Will converting my image reduce its quality?",
+        a: "Converting to PNG is lossless — every pixel survives. Converting to JPG, WebP or AVIF re-compresses the image, but at quality 90 and above the difference is usually invisible. For the smallest files, prefer WebP or AVIF over JPG at the same quality.",
+      },
+      {
+        q: "What happens to transparency when I convert a PNG to JPG?",
+        a: "JPG has no transparency, so transparent areas are filled with white — never black. Keep PNG or WebP if you need the transparent background to stay transparent.",
+      },
+      {
+        q: "Why can't I select AVIF?",
+        a: "AVIF encoding is only built into Chromium browsers (Chrome, Edge, Brave). If the option is missing, your browser can't encode AVIF — the tool hides it instead of handing you a broken file. Every browser on this page can convert to JPG, PNG and WebP.",
+      },
+      {
+        q: "Are my images uploaded to a server?",
+        a: "No. Decoding and re-encoding run entirely inside your browser — the files never leave your device, which is also why there are no limits and no account.",
+      },
+    ],
+  },
+  {
+    id: "crop-image",
+    name: "Crop & Rotate Image",
+    short:
+      "Crop images free online — drag a box, lock an aspect ratio like 1:1 or 16:9, rotate and flip, download at full resolution. Nothing uploaded.",
+    category: "image",
+    icon: "crop",
+    keywords:
+      "crop image online image cropper cut picture crop to square crop 16:9 aspect ratio cropper rotate image flip image mirror photo turn picture sideways straighten photo crop tool free crop without uploading no sign up",
+    intro:
+      "Crop, rotate and flip images with a drag-anywhere selection box. Pull the box over what you want to keep, lock an aspect ratio — 1:1 for profile pictures, 16:9 for thumbnails and covers, 4:3 and 3:2 for classic photo shapes — or crop completely free-form. Straighten a sideways photo with 90° rotation steps and mirror it horizontally or vertically when the shot is backwards. The preview is scaled to fit your screen, but the download always comes out at the full resolution of your selection, and you choose JPG, PNG or WebP for the result. As with every FreeSeak tool, the whole thing runs in your browser — nothing is uploaded anywhere.",
+    howTo: [
+      "Drop an image onto the page, click to browse, or paste it from the clipboard.",
+      "Drag the corners of the selection box over the part you want to keep, or lock an aspect ratio like 1:1 first.",
+      "Use the rotate and flip buttons to straighten or mirror the image if needed.",
+      "Pick the output format and quality, then press Download — the crop is saved at full resolution.",
+    ],
+    faq: [
+      {
+        q: "Does cropping reduce the quality of my image?",
+        a: "No. Cropping just selects pixels — the part you keep is saved at its original, full resolution. Only the format choice matters: saving as JPG or WebP re-compresses, PNG is lossless.",
+      },
+      {
+        q: "Can I crop to an exact ratio like 1:1 or 16:9?",
+        a: "Yes — tap the ratio chip and the box locks to it while you drag. Free lets you draw any rectangle. The selection size in pixels is shown live under the preview.",
+      },
+      {
+        q: "What do rotate and flip do to my crop?",
+        a: "The preview always shows exactly what you'll get: rotation and flips are applied first, and the crop box lives on the rotated image. Changing rotation or flipping resets the box to the full image so nothing drifts out of view.",
+      },
+      {
+        q: "Is my image uploaded to a server?",
+        a: "No. The crop, rotation and re-encode all happen inside your browser — your image never leaves your device.",
+      },
+    ],
+  },
+  {
+    id: "favicon-generator",
+    name: "Favicon Generator",
+    short:
+      "Generate a complete favicon pack free — one image in, get favicon.ico, PNG icons, apple-touch-icon, a webmanifest and the HTML. No uploads.",
+    category: "image",
+    icon: "globe",
+    keywords:
+      "favicon generator create favicon favicon ico apple touch icon site icon website icon favicon pack web app manifest pwa icons free favicon maker online generate favicon from image no sign up",
+    intro:
+      "Turn one image into every icon a modern website needs. Drop in a square logo (non-square images are centre-cropped automatically) and the generator produces a real multi-size favicon.ico with 16, 32 and 48 px entries, PNG icons for modern browsers, the 180 px apple-touch-icon for iOS home screens, 192 and 512 px Android icons, a site.webmanifest that ties them together, and a README with the exact HTML to paste into your <head>. Everything arrives as one zip, ready to drop into your site's root folder. The whole pack is generated in your browser — your logo never touches a server.",
+    howTo: [
+      "Drop your logo onto the page — square and at least 512 × 512 px gives the sharpest results.",
+      "Optionally type your site name; it goes into the webmanifest.",
+      "Press Generate favicon pack and check the previews at real sizes.",
+      "Download the zip, copy the files into your website's root folder and paste the HTML snippet into your <head>.",
+    ],
+    faq: [
+      {
+        q: "What exactly is in the favicon pack?",
+        a: "A favicon.ico containing 16, 32 and 48 px icons in one file, six PNGs (16, 32, 48, 180, 192 and 512 px), a site.webmanifest linking the Android icons, and a README with step-by-step instructions and the HTML snippet.",
+      },
+      {
+        q: "Does my image need to be square?",
+        a: "No — non-square images are centre-cropped to a square automatically. But a square source means nothing important gets cut off, and at least 512 × 512 px keeps the large icons sharp. If your image is smaller, the pack still generates and you get an honest warning about upscaling.",
+      },
+      {
+        q: "Why do browsers still show my old favicon?",
+        a: "Browsers cache favicons very aggressively. After uploading the new files, hard-refresh with Ctrl+F5 (Windows) or Cmd+Shift+R (Mac) — or test in a private window. The README in the pack reminds you of this too.",
+      },
+      {
+        q: "Is my logo uploaded anywhere?",
+        a: "No. The icons, the .ico file, the manifest and the zip are all built inside your browser — your logo never leaves your device.",
+      },
+    ],
+  },
 ];
 
 export function getTool(id: string): ToolDef | undefined {
