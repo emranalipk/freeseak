@@ -35,7 +35,7 @@ export function PercentageCalculator() {
     Number.isFinite(from) && Number.isFinite(to) && from !== 0 ? ((to - from) / Math.abs(from)) * 100 : NaN;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" aria-live="polite">
       {/* card 1 */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <p className="font-display text-[13.5px] font-bold text-foreground">

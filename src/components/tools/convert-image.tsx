@@ -114,7 +114,11 @@ export function ImageConverter() {
     setItems((prev) =>
       prev.map((item) => {
         if (item.status !== "done" || !item.result) return item;
-        URL.revokeObjectURL(item.result.previewUrl);
+        /* passthrough results share the queue thumbnail's URL — only
+           revoke result URLs this tool created itself */
+        if (item.result.previewUrl !== item.previewUrl) {
+          URL.revokeObjectURL(item.result.previewUrl);
+        }
         return { ...item, status: "queued" as const, result: undefined };
       }),
     );
@@ -189,6 +193,29 @@ export function ImageConverter() {
     for (const item of pending) {
       updateItem(item.id, { status: "working" });
       try {
+        const gifNote =
+          item.file.type === "image/gif"
+            ? "Animated GIF: only the first frame is kept (browsers cannot re-encode animation)."
+            : undefined;
+
+        if (item.file.type === format) {
+          /* same format in and out: re-encoding would only cost quality —
+             pass the original through untouched */
+          updateItem(item.id, {
+            status: "done",
+            result: {
+              blob: item.file,
+              previewUrl: item.previewUrl,
+              name: item.file.name,
+              size: item.file.size,
+              mime: item.file.type,
+              note: `Already ${EXT_FOR[format].toUpperCase()} — passed through without re-compressing.`,
+            },
+          });
+          okCount += 1;
+          continue;
+        }
+
         const loaded = await loadImageFile(item.file);
         const encoded = await encodeImage(loaded.img, {
           width: loaded.width,
@@ -214,9 +241,15 @@ export function ImageConverter() {
             name,
             size: encoded.blob.size,
             mime: encoded.mime,
-            note: swapped
-              ? `This browser can't encode ${EXT_FOR[format].toUpperCase()} — saved as ${EXT_FOR[encoded.mime as TargetMime]?.toUpperCase() ?? encoded.mime.toUpperCase()} instead.`
-              : undefined,
+            note:
+              [
+                swapped
+                  ? `This browser can't encode ${EXT_FOR[format].toUpperCase()} — saved as ${EXT_FOR[encoded.mime as TargetMime]?.toUpperCase() ?? encoded.mime.toUpperCase()} instead.`
+                  : undefined,
+                gifNote,
+              ]
+                .filter(Boolean)
+                .join(" ") || undefined,
           },
         });
         okCount += 1;

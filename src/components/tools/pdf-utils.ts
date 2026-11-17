@@ -80,7 +80,7 @@ export async function loadPdf(file: File): Promise<LoadedPdf> {
 /** friendly, actionable error copy for PDF failures */
 export function pdfErrorMessage(err: unknown): string {
   if (err instanceof PasswordRequiredError) {
-    return "This PDF is password-protected — remove the protection first (it must open without a password to be processed).";
+    return "This PDF is password-protected — remove the protection first (it must open without a password to be processed). Need to edit a protected file? The Edit PDF tool can open it when you type its password.";
   }
   if (err instanceof CorruptPdfError) {
     return "This PDF couldn't be opened — the file may be damaged or not a PDF at all.";

@@ -21,10 +21,12 @@ import {
 } from "./pdf-shared";
 import {
   loadPdf,
+  loadPdfLib,
   pdfErrorMessage,
   savePdf,
   type LoadedPdf,
 } from "./pdf-utils";
+import type { PDFRef } from "pdf-lib";
 
 interface MetaFields {
   title: string;
@@ -46,10 +48,23 @@ type MetaState =
   | { status: "ready"; pdf: LoadedPdf }
   | { status: "error"; name: string; error: string };
 
+function formatDateTime(d: Date | null): string {
+  if (!d) return "not set";
+  return d.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 export function EditPdfMetadata() {
   const [state, setState] = useState<MetaState>({ status: "empty" });
   const [original, setOriginal] = useState<MetaFields>(EMPTY_META);
   const [fields, setFields] = useState<MetaFields>(EMPTY_META);
+  const [dates, setDates] = useState<{ created: Date | null; modified: Date | null }>({
+    created: null,
+    modified: null,
+  });
+  const [scrubbed, setScrubbed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState<OutputFile[]>([]);
 
@@ -67,8 +82,18 @@ export function EditPdfMetadata() {
         subject: loaded.doc.getSubject() ?? "",
         keywords: loaded.doc.getKeywords() ?? "",
       };
+      let created: Date | null = null;
+      let modified: Date | null = null;
+      try {
+        created = loaded.doc.getCreationDate() ?? null;
+      } catch { /* absent or malformed — show "not set" */ }
+      try {
+        modified = loaded.doc.getModificationDate() ?? null;
+      } catch { /* absent or malformed */ }
       setOriginal(read);
       setFields(read);
+      setDates({ created, modified });
+      setScrubbed(false);
       setState({ status: "ready", pdf: loaded });
     } catch (err) {
       setState({ status: "error", name: file.name, error: pdfErrorMessage(err) });
@@ -79,22 +104,29 @@ export function EditPdfMetadata() {
     setState({ status: "empty" });
     setOriginal(EMPTY_META);
     setFields(EMPTY_META);
+    setDates({ created: null, modified: null });
+    setScrubbed(false);
     setResults([]);
   };
 
   const dirty =
+    scrubbed ||
     fields.title !== original.title ||
     fields.author !== original.author ||
     fields.subject !== original.subject ||
     fields.keywords !== original.keywords;
 
-  const scrub = () => setFields(EMPTY_META);
+  const scrub = () => {
+    setFields(EMPTY_META);
+    setScrubbed(true);
+  };
 
   const run = async () => {
     if (!pdf) return;
     setBusy(true);
     setResults([]);
     try {
+      const { PDFName } = await loadPdfLib();
       /* re-load fresh: repeated saves must never stack on edited state */
       const source = await loadPdf(pdf.file);
 
@@ -108,13 +140,38 @@ export function EditPdfMetadata() {
           .filter(Boolean),
       );
 
+      /* modern PDFs carry a SECOND metadata copy as an XMP packet on the
+         catalog (dc:title, dc:creator, xmp:CreatorTool …) — viewers can
+         read it even after the info dictionary is rewritten. Remove the
+         reference AND the object, so the saved file carries exactly what
+         this form shows and nothing else. */
+      const metaObj = source.doc.catalog.get(PDFName.of("Metadata"));
+      if (metaObj) {
+        if ("objectNumber" in metaObj) {
+          source.doc.context.delete(metaObj as PDFRef);
+        }
+        source.doc.catalog.delete(PDFName.of("Metadata"));
+      }
+
+      /* dates: modified = now; a scrubbed file gets a fresh creation date
+         so the original document's history is gone */
+      const now = new Date();
+      source.doc.setModificationDate(now);
+      if (scrubbed) {
+        try {
+          source.doc.setCreationDate(now);
+        } catch { /* date library edge case — never block the save */ }
+      }
+
       const blob = await savePdf(source.doc);
       const base = pdf.file.name.replace(/\.pdf$/i, "");
       setResults([
         {
           blob,
           name: `${base}-metadata.pdf`,
-          note: dirty ? "Metadata updated" : "Metadata re-saved unchanged",
+          note: dirty
+            ? `Metadata updated${scrubbed ? " · dates reset" : ""} · the hidden XMP packet was removed too`
+            : "Metadata re-saved unchanged · the hidden XMP packet was removed",
         },
       ]);
       toast.success("Metadata saved", {
@@ -179,10 +236,18 @@ export function EditPdfMetadata() {
               {field("subject", "Subject", "What it is about")}
               {field("keywords", "Keywords", "comma, separated, search terms")}
             </div>
+            <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+              Created {formatDateTime(dates.created)} · Modified{" "}
+              {formatDateTime(dates.modified)} — the modified date is rewritten
+              on every save{scrubbed ? ", and a scrubbed file gets a fresh creation date" : ""}.
+            </p>
             <p className="text-[12px] leading-relaxed text-muted-foreground">
-              Sharing a PDF? Metadata travels with it — Word "Author" fields
+              Sharing a PDF? Metadata travels with it — Word &quot;Author&quot; fields
               often leak real names and internal paths. Clear the fields and
-              save to send a clean file.
+              save to send a clean file: the classic fields AND the hidden XMP
+              packet are removed. One deliberate leftover: the saved file is
+              stamped “FreeSeak (freeseak.com)” as its producer, like every
+              file this site generates.
             </p>
             <div className="flex flex-wrap gap-2.5">
               <Button

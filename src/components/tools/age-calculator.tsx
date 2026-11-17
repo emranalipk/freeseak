@@ -8,11 +8,19 @@ import { Label } from "@/components/ui/label";
 function diffAge(dob: Date, now: Date) {
   let years = now.getFullYear() - dob.getFullYear();
   let months = now.getMonth() - dob.getMonth();
-  let days = now.getDate() - dob.getDate();
+  /* the anniversary day in "now"'s month, clamped to that month's length —
+     a Jan 31 birthday read on Mar 1 is 1 month + 1 day, never "-1 days" */
+  const anchorDay = Math.min(
+    dob.getDate(),
+    new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(),
+  );
+  let days = now.getDate() - anchorDay;
   if (days < 0) {
     months -= 1;
-    // days in the previous month of "now"
-    days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    // borrow from the month before "now", with the same day clamping
+    const prevMonthLen = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    const prevAnchor = Math.min(dob.getDate(), prevMonthLen);
+    days = now.getDate() + prevMonthLen - prevAnchor;
   }
   if (months < 0) {
     years -= 1;
@@ -87,7 +95,11 @@ export function AgeCalculator() {
 
       {result && !("error" in result) && (
         <>
-          <div className="grid grid-cols-3 gap-2.5">
+          <div
+            className="grid grid-cols-3 gap-2.5"
+            aria-live="polite"
+            aria-label="Exact age"
+          >
             {[
               { label: "Years", value: result.age.years },
               { label: "Months", value: result.age.months },

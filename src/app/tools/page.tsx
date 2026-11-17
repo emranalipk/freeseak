@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ToolGrid } from "@/components/site/tool-grid";
+import { TOOLS } from "@/lib/tools";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 /**
@@ -9,8 +10,7 @@ import { CONTACT_EMAIL } from "@/lib/site";
  */
 export const metadata: Metadata = {
   title: "All Free Online Tools — PDF, Image Tools, Calculators & Productivity",
-  description:
-    "Browse all 17 FreeSeak tools: PDF suite (merge, split, organize, compress and more), image tools (compress, resize, enhance and upscale), QR code generator, word counter, percentage calculator and age calculator. All free, no sign-up, nothing uploaded.",
+  description: `Browse all ${TOOLS.length} FreeSeak tools: the complete PDF suite (edit, merge, split, organize, compress and more), image tools (compress, resize, enhance and upscale), a bilingual Punjab Registry Estimator, QR code generator, word counter and calculators. All free, no sign-up, nothing uploaded.`,
   alternates: { canonical: "/tools" },
   openGraph: {
     title: "All Free Online Tools — FreeSeak",

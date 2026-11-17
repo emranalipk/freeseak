@@ -35,7 +35,13 @@ import {
   pdfErrorMessage,
   savePdf,
 } from "./pdf-utils";
-import { openWithPdfJs, renderPdfPage } from "./pdf-render";
+import { openWithPdfJs, renderPdfPage, destroyPdfJsDoc } from "./pdf-render";
+import {
+  cssFontFamily,
+  ensureNotoFontFace,
+  loadNotoBytes,
+  needsUnicodeFont,
+} from "./pdf-fonts";
 
 type Layout = "once" | "tile";
 
@@ -86,7 +92,8 @@ export function WatermarkPdf() {
         const bytes = new Uint8Array(await loaded.file.arrayBuffer());
         const doc = await openWithPdfJs(bytes);
         const rendered = await renderPdfPage(doc, 1, 0.55);
-        await doc.cleanup();
+        /* the document proxy is no longer needed once page 1 is painted */
+        await destroyPdfJsDoc(doc);
         if (!cancelled) {
           pageCanvasRef.current = rendered.canvas;
           setPage1Ready((n) => n + 1);
@@ -116,10 +123,14 @@ export function WatermarkPdf() {
     const scale = page.width / (pdf?.width ?? 1);
     const fontPx = Math.max(8, size * scale);
     const label = text.trim() || " ";
+    const unicode = needsUnicodeFont(label);
+    if (unicode) void ensureNotoFontFace();
     ctx.save();
     ctx.globalAlpha = opacity / 100;
     ctx.fillStyle = color;
-    ctx.font = `bold ${fontPx}px Helvetica, Arial, sans-serif`;
+    ctx.font = unicode
+      ? `${fontPx}px ${cssFontFamily("Noto")}`
+      : `bold ${fontPx}px Helvetica, Arial, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
@@ -155,9 +166,23 @@ export function WatermarkPdf() {
     try {
       const { StandardFonts, rgb, degrees } = await loadPdfLib();
       const source = await loadPdf(pdf.file);
-      const font = await source.doc.embedFont(StandardFonts.HelveticaBold);
-      const tint = hexToRgb(color) ?? { r: 0.6, g: 0.64, b: 0.69 };
       const label = text.trim();
+      /* Unicode labels (accented Latin, Cyrillic, CJK…) cannot ride on the
+         WinAnsi standard fonts — embed the shipped Noto Sans for them */
+      const unicode = needsUnicodeFont(label);
+      let font;
+      if (unicode) {
+        source.doc.registerFontkit((await import("@pdf-lib/fontkit")).default);
+        const bytes = await loadNotoBytes("regular");
+        try {
+          font = await source.doc.embedFont(bytes, { subset: true });
+        } catch {
+          font = await source.doc.embedFont(bytes, { subset: false });
+        }
+      } else {
+        font = await source.doc.embedFont(StandardFonts.HelveticaBold);
+      }
+      const tint = hexToRgb(color) ?? { r: 0.6, g: 0.64, b: 0.69 };
       const textW = font.widthOfTextAtSize(label, size);
       const theta = (parseInt(angle, 10) * Math.PI) / 180;
 
@@ -165,12 +190,17 @@ export function WatermarkPdf() {
         const page = source.doc.getPage(pageIndex);
         const { width, height } = page.getSize();
 
-        /* pdf-lib rotates around the text origin, so place the start of
-           the baseline such that the text's midpoint lands on target */
+        /* pdf-lib rotates around the text origin (the baseline start), so
+           place the baseline such that the text's VISUAL MIDDLE lands on
+           target — the same centre the live preview paints: baseline sits
+           midOffset below the centre, along the text's own "up" direction */
         const stamp = (cx: number, cy: number) => {
+          const upX = -Math.sin(theta);
+          const upY = Math.cos(theta);
+          const midOffset = size * 0.3;
           page.drawText(label, {
-            x: cx - Math.cos(theta) * (textW / 2),
-            y: cy - Math.sin(theta) * (textW / 2),
+            x: cx - Math.cos(theta) * (textW / 2) - upX * midOffset,
+            y: cy - Math.sin(theta) * (textW / 2) - upY * midOffset,
             size,
             font,
             color: rgb(tint.r, tint.g, tint.b),
@@ -362,6 +392,9 @@ export function WatermarkPdf() {
               <p className="text-[12px] leading-relaxed text-muted-foreground">
                 The preview shows your document's real first page with the
                 watermark exactly as it will be stamped.
+                {parsed && parsed.valid && parsed.pages.length > 0 && !parsed.pages.includes(0)
+                  ? " Your page range doesn't include page 1 — the same stamp lands on the pages you picked."
+                  : ""}
               </p>
             </div>
           </div>

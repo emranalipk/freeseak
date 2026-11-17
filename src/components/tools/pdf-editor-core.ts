@@ -37,6 +37,15 @@ import {
 } from "pdf-lib";
 import { hexToRgb, loadPdfLib } from "./pdf-utils";
 import { loadPdfJs, renderPdfPage, destroyPdfJsDoc } from "./pdf-render";
+import {
+  cssFontFamily,
+  ensureNotoFontFace,
+  hasCjk,
+  loadNotoBytes,
+} from "./pdf-fonts";
+
+/* re-exported for the editor UI, which imports them from this module */
+export { cssFontFamily, ensureNotoFontFace, needsUnicodeFont } from "./pdf-fonts";
 
 /* ------------------------------------------------------------------ */
 /* types — annotations in normalised display coordinates (y down)      */
@@ -155,68 +164,6 @@ export const BASELINE_FACTOR = 0.95;
 
 export function uid(): string {
   return `a${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-}
-
-export function cssFontFamily(font: TextFont): string {
-  switch (font) {
-    case "Times":
-      return "'Times New Roman', Times, serif";
-    case "Courier":
-      return "'Courier New', Courier, monospace";
-    case "Noto":
-      return NOTO_CSS_FAMILY;
-    default:
-      return "Helvetica, Arial, sans-serif";
-  }
-}
-
-/** true when a string needs the embedded Unicode font (beyond WinAnsi) */
-export function needsUnicodeFont(text: string): boolean {
-  return /[^\u0000-\u00ff]/.test(text);
-}
-
-/* ------------------------------------------------------------------ */
-/* the Noto font — one family, shipped locally, lazy-loaded            */
-/* ------------------------------------------------------------------ */
-
-export const NOTO_FONT_NAME = "Noto Sans Editor";
-export const NOTO_SC_FONT_NAME = "Noto Sans SC Editor";
-export const NOTO_CSS_FAMILY = `'${NOTO_FONT_NAME}', '${NOTO_SC_FONT_NAME}', sans-serif`;
-
-let notoFacesAdded = false;
-
-/** register the shipped Noto files as CSS font faces (for the overlay) */
-export async function ensureNotoFontFace(): Promise<void> {
-  if (notoFacesAdded) return;
-  notoFacesAdded = true;
-  const faces = [
-    new FontFace(NOTO_FONT_NAME, "url(/fonts/NotoSans-Regular.ttf)"),
-    new FontFace(NOTO_FONT_NAME, "url(/fonts/NotoSans-Bold.ttf)", { weight: "700" }),
-    new FontFace(NOTO_SC_FONT_NAME, "url(/fonts/NotoSansSC-Regular.ttf)"),
-  ];
-  const loaded = await Promise.all(faces.map((face) => face.load()));
-  loaded.forEach((face) => document.fonts.add(face));
-}
-
-let notoBytesCache: Record<string, Promise<ArrayBuffer>> = {};
-
-/** the raw TTFs for pdf-lib embedding — fetched once, then cached */
-export function loadNotoBytes(variant: "regular" | "bold" | "sc"): Promise<ArrayBuffer> {
-  if (!notoBytesCache[variant]) {
-    const file =
-      variant === "bold"
-        ? "/fonts/NotoSans-Bold.ttf"
-        : variant === "sc"
-          ? "/fonts/NotoSansSC-Regular.ttf"
-          : "/fonts/NotoSans-Regular.ttf";
-    notoBytesCache[variant] = fetch(file).then((r) => r.arrayBuffer());
-  }
-  return notoBytesCache[variant];
-}
-
-/** CJK ranges — the SC pack covers Han, Kana and Bopomofo subsets */
-function hasCjk(text: string): boolean {
-  return /[\u2e80-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u30ff]/.test(text);
 }
 
 /* ------------------------------------------------------------------ */
@@ -822,7 +769,12 @@ export async function exportEditedPdf(
     const edited = await buildVector();
     request.onProgress("Opening the edited copy…");
     const pdfjs = await loadPdfJs();
-    const doc = await pdfjs.getDocument({ data: new Uint8Array(edited) }).promise;
+    const doc = await pdfjs.getDocument({
+      data: new Uint8Array(edited),
+      cMapUrl: "/pdfjs/cmaps/",
+      cMapPacked: true,
+      standardFontDataUrl: "/pdfjs/standard_fonts/",
+    }).promise;
     try {
       bytes = await rasterizeDocument(doc, false);
     } finally {

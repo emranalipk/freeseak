@@ -8,7 +8,7 @@
  */
 
 import { useState } from "react";
-import { ScanText } from "lucide-react";
+import { Copy, ScanText } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,12 @@ import {
   type OutputFile,
 } from "./pdf-shared";
 import { parsePageRange, pdfErrorMessage } from "./pdf-utils";
-import { extractPageText, openWithPdfJs, renderPdfPage } from "./pdf-render";
+import {
+  destroyPdfJsDoc,
+  extractPageText,
+  openWithPdfJs,
+  renderPdfPage,
+} from "./pdf-render";
 import { ocrCanvas } from "./ocr-engine";
 
 interface Extraction {
@@ -63,9 +68,11 @@ export function ExtractPdfText() {
         setProgress({ done: i + 1, total: selectedPages.length });
         await new Promise((r) => setTimeout(r, 0));
       }
-      await doc.cleanup();
+      await destroyPdfJsDoc(doc);
 
-      const text = chunks.join("\n\n");
+      /* form-feed page breaks (the pdftotext convention) so page
+         boundaries stay visible in the deliverable */
+      const text = chunks.join("\n\f\n");
       const words = text.split(/\s+/).filter(Boolean).length;
 
       if (text.trim().length === 0) {
@@ -82,7 +89,13 @@ export function ExtractPdfText() {
         });
         const base = pdf.file.name.replace(/\.pdf$/i, "");
         const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-        setResults([{ blob, name: `${base}-text.txt`, note: "Plain text, UTF-8" }]);
+        setResults([
+          {
+            blob,
+            name: `${base}-text.txt`,
+            note: "Plain text, UTF-8 · pages separated by form-feed breaks",
+          },
+        ]);
         toast.success("Text extracted", {
           description: "Processed on your device — nothing was uploaded.",
         });
@@ -107,19 +120,36 @@ export function ExtractPdfText() {
       const bytes = new Uint8Array(await pdf.file.arrayBuffer());
       const doc = await openWithPdfJs(bytes);
       const chunks: string[] = [];
+      let emptyPages = 0;
       for (let i = 0; i < selectedPages.length; i++) {
         const rendered = await renderPdfPage(doc, selectedPages[i] + 1, 2);
         const result = await ocrCanvas(rendered.canvas);
-        chunks.push(result.text.length > 0 ? result.text : "(no readable text on this page)");
+        if (result.text.length > 0) {
+          chunks.push(result.text);
+        } else {
+          emptyPages += 1;
+        }
         setOcrBusy({ done: i + 1, total: selectedPages.length });
       }
-      await doc.cleanup();
-      const text = chunks.join("\n\n");
+      await destroyPdfJsDoc(doc);
+      /* only real recognised text ships — empty pages are reported in the
+         note, never injected into the .txt as placeholder lines */
+      const text = chunks.join("\n\f\n");
       const words = text.split(/\s+/).filter(Boolean).length;
       setExtraction({ text, pages: selectedPages.length, words, chars: text.length });
       const base = pdf.file.name.replace(/\.pdf$/i, "");
       const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-      setResults([{ blob, name: `${base}-ocr.txt`, note: "Recognised by on-device OCR (English)" }]);
+      setResults([
+        {
+          blob,
+          name: `${base}-ocr.txt`,
+          note:
+            "Recognised by on-device OCR (English) · pages separated by form-feed breaks" +
+            (emptyPages > 0
+              ? ` · ${emptyPages} page${emptyPages === 1 ? "" : "s"} had no readable text`
+              : ""),
+        },
+      ]);
       toast.success("OCR finished", {
         description: "Processed on your device — nothing was uploaded.",
       });
@@ -195,7 +225,7 @@ export function ExtractPdfText() {
 
           {extraction && (
             <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5">
-              <div className="flex flex-wrap gap-x-5 gap-y-1">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-1" aria-live="polite">
                 <span className="text-[12.5px] text-muted-foreground">
                   <span className="font-bold text-foreground">{extraction.pages}</span>{" "}
                   page{extraction.pages === 1 ? "" : "s"} read
@@ -212,6 +242,21 @@ export function ExtractPdfText() {
                   </span>{" "}
                   characters
                 </span>
+                {extraction.text.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto gap-1.5"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(extraction.text);
+                      toast.success("All extracted text copied to the clipboard.");
+                    }}
+                  >
+                    <Copy className="size-3.5" aria-hidden="true" />
+                    Copy all
+                  </Button>
+                )}
               </div>
               {extraction.text.length > 0 ? (
                 <textarea

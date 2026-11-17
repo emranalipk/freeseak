@@ -143,6 +143,22 @@ export function ImageCompressor() {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
   }, []);
 
+  /* settings changed → finished results are stale; requeue them so the
+     next Compress run applies the new settings (same pattern as the
+     Image Converter). Passthrough results share the queue thumbnail's
+     object URL — only revoke result URLs the tool created itself. */
+  const requeueDone = useCallback(() => {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.status !== "done" || !item.result) return item;
+        if (item.result.previewUrl !== item.previewUrl) {
+          URL.revokeObjectURL(item.result.previewUrl);
+        }
+        return { ...item, status: "queued" as const, result: undefined };
+      }),
+    );
+  }, []);
+
   const addFiles = useCallback(
     (incoming: File[]) => {
       const images = incoming.filter((f) => f.type.startsWith("image/"));
@@ -230,10 +246,11 @@ export function ImageCompressor() {
 
         if (
           mode === "target" &&
-          format === "keep" &&
+          resolveMime(item.file.type, format) === item.file.type &&
           item.file.size <= targetKB * 1024
         ) {
-          /* the original already fits the budget — never hand back a worse file */
+          /* the original already fits the budget and stays in its format —
+             never hand back a worse file */
           outcome = {
             blob: item.file,
             previewUrl: item.previewUrl,
@@ -404,7 +421,7 @@ export function ImageCompressor() {
                 type="button"
                 role="tab"
                 aria-selected={mode === m.value}
-                onClick={() => setMode(m.value)}
+                onClick={() => { setMode(m.value); requeueDone(); }}
                 className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[12.5px] font-bold transition-colors ${
                   mode === m.value
                     ? "bg-card text-foreground shadow-sm"
@@ -432,7 +449,7 @@ export function ImageCompressor() {
                 max={100}
                 step={1}
                 value={qualityPct}
-                onChange={(e) => setQualityPct(parseInt(e.target.value, 10))}
+                onChange={(e) => { setQualityPct(parseInt(e.target.value, 10)); requeueDone(); }}
                 className="h-2 w-full cursor-pointer accent-primary"
               />
               <p className="text-[12px] text-muted-foreground">
@@ -465,7 +482,7 @@ export function ImageCompressor() {
                   <button
                     key={c.kb}
                     type="button"
-                    onClick={() => setTargetKB(c.kb)}
+                    onClick={() => { setTargetKB(c.kb); requeueDone(); }}
                     className={`rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors ${
                       targetKB === c.kb
                         ? "border-primary bg-secondary text-foreground"
@@ -490,7 +507,7 @@ export function ImageCompressor() {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setPreset(key)}
+                  onClick={() => { setPreset(key); requeueDone(); }}
                   className={`rounded-xl border p-3.5 text-left transition-colors ${
                     preset === key
                       ? "border-primary bg-secondary"
@@ -512,7 +529,7 @@ export function ImageCompressor() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="ic-format">Output format</Label>
-              <Select value={format} onValueChange={(v) => setFormat(v as FormatChoice)}>
+              <Select value={format} onValueChange={(v) => { setFormat(v as FormatChoice); requeueDone(); }}>
                 <SelectTrigger id="ic-format" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -534,7 +551,7 @@ export function ImageCompressor() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="ic-cap">Resize large images</Label>
-              <Select value={sizeCap} onValueChange={setSizeCap}>
+              <Select value={sizeCap} onValueChange={(v) => { setSizeCap(v); requeueDone(); }}>
                 <SelectTrigger id="ic-cap" className="w-full">
                   <SelectValue />
                 </SelectTrigger>

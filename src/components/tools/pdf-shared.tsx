@@ -35,6 +35,7 @@ import {
   zipAndDownload,
   type LoadedPdf,
 } from "./pdf-utils";
+import { brandFilename } from "./image-utils";
 
 /* ------------------------------------------------------------------ */
 /* dropzone                                                            */
@@ -223,8 +224,11 @@ export function PageRangeInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={`e.g. 1-3, 5 — leave empty for all ${pageCount} pages`}
         autoComplete="off"
+        aria-describedby={`${id}-feedback`}
       />
       <p
+        id={`${id}-feedback`}
+        aria-live="polite"
         className={`text-[12px] leading-relaxed ${
           parsed.valid ? "text-muted-foreground" : "text-destructive"
         }`}
@@ -273,7 +277,9 @@ export function ResultsPanel({
     }
     setZipping(true);
     try {
-      await zipAndDownload(files, zipName);
+      /* store:true — PDFs/JPEGs are already compressed; bundling is
+         container work, and DEFLATE over them is just slow */
+      await zipAndDownload(files, zipName, { store: true });
     } catch {
       toast.error("Couldn't build the zip file — download the files one by one.");
     } finally {
@@ -304,9 +310,9 @@ export function ResultsPanel({
       </div>
 
       <ul className="flex flex-col gap-2">
-        {files.map((f) => (
+        {files.map((f, index) => (
           <li
-            key={f.name}
+            key={`${f.name}-${index}`}
             className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5"
           >
             {f.previewUrl ? (
@@ -322,7 +328,7 @@ export function ResultsPanel({
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-semibold text-foreground">
-                {f.name}
+                {brandFilename(f.name)}
               </p>
               <p className="text-[12px] text-muted-foreground">
                 {formatBytes(f.blob.size)}

@@ -25,7 +25,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ImageDropZone } from "./image-drop";
-import { encodeImage, formatBytes, loadImageFile } from "./image-utils";
+import {
+  encodeImage,
+  formatBytes,
+  loadImageFile,
+  readJpegOrientation,
+} from "./image-utils";
 import { ActionRow, ResultsPanel, type OutputFile } from "./pdf-shared";
 import { loadPdfLib, pdfErrorMessage, savePdf } from "./pdf-utils";
 
@@ -43,6 +48,10 @@ const FIXED_SIZES: Record<Exclude<PageSize, "auto">, { w: number; h: number }> =
   letter: { w: 612, h: 792 },
 };
 
+/** "Fit each image" sizing: 96 DPI (px × 0.75), capped at a 20 in page */
+const AUTO_PT_PER_PX = 72 / 96;
+const AUTO_MAX_SIDE_PT = 1440;
+
 const MARGINS = [
   { value: "0", label: "No margin" },
   { value: "18", label: "Small margin" },
@@ -56,6 +65,7 @@ interface ImageItem {
   width: number;
   height: number;
   status: "loading" | "ready" | "error";
+  error?: string;
 }
 
 export function ImagesToPdf() {
@@ -99,6 +109,9 @@ export function ImagesToPdf() {
           () =>
             updateItem(startId + i, {
               status: "error",
+              error: /heic|heif/i.test(file.type + " " + file.name)
+                ? "HEIC isn't readable in this browser — export the photo as JPG and add it again."
+                : "Couldn't read this image.",
             }),
         );
       });
@@ -139,6 +152,7 @@ export function ImagesToPdf() {
       const { PDFDocument, rgb } = await loadPdfLib();
       const out = await PDFDocument.create();
       const marginPt = parseInt(margin, 10);
+      let reoriented = 0;
 
       for (const item of ready) {
         const { img } = await loadImageFile(item.file);
@@ -146,7 +160,23 @@ export function ImagesToPdf() {
         let pngBytes: Uint8Array | null = null;
 
         if (item.file.type === "image/jpeg") {
-          jpgBytes = new Uint8Array(await item.file.arrayBuffer());
+          const raw = new Uint8Array(await item.file.arrayBuffer());
+          if (readJpegOrientation(raw) > 1) {
+            /* EXIF-rotated phone photo: a PDF has no EXIF concept, so the
+               canvas re-encode bakes the rotation in — it comes out upright */
+            const encoded = await encodeImage(img, {
+              width: item.width,
+              height: item.height,
+              fit: "stretch",
+              background: "#FFFFFF",
+              mime: "image/jpeg",
+              quality: 0.92,
+            });
+            jpgBytes = new Uint8Array(await encoded.blob.arrayBuffer());
+            reoriented += 1;
+          } else {
+            jpgBytes = raw;
+          }
         } else if (item.file.type === "image/png") {
           pngBytes = new Uint8Array(await item.file.arrayBuffer());
         } else {
@@ -167,13 +197,26 @@ export function ImagesToPdf() {
           : await out.embedPng(pngBytes as Uint8Array);
 
         if (pageSize === "auto") {
-          /* one page per image, image size = page size (px treated as pt) */
-          const page = out.addPage([embedded.width, embedded.height]);
+          /* one page per image at 96 DPI, capped at a 20 in longest side —
+             raw phone pixels-as-points would make 55-inch-wide pages that
+             printers and upload portals reject */
+          let w = embedded.width * AUTO_PT_PER_PX;
+          let h = embedded.height * AUTO_PT_PER_PX;
+          const longest = Math.max(w, h);
+          if (longest > AUTO_MAX_SIDE_PT) {
+            const s = AUTO_MAX_SIDE_PT / longest;
+            w *= s;
+            h *= s;
+          }
+          const page = out.addPage([
+            Math.max(1, Math.round(w)),
+            Math.max(1, Math.round(h)),
+          ]);
           page.drawImage(embedded, {
             x: 0,
             y: 0,
-            width: embedded.width,
-            height: embedded.height,
+            width: Math.round(w),
+            height: Math.round(h),
           });
         } else {
           const base = FIXED_SIZES[pageSize];
@@ -205,7 +248,11 @@ export function ImagesToPdf() {
         {
           blob,
           name: `${base}${ready.length > 1 ? `-images` : ""}.pdf`,
-          note: `${ready.length} image${ready.length > 1 ? "s" : ""} · JPG/PNG embedded without recompression`,
+          note:
+            `${ready.length} image${ready.length > 1 ? "s" : ""} · JPG/PNG embedded without recompression` +
+            (reoriented > 0
+              ? ` · ${reoriented} phone photo${reoriented > 1 ? "s were" : " was"} re-oriented upright`
+              : ""),
         },
       ]);
       toast.success("PDF created", {
@@ -243,7 +290,7 @@ export function ImagesToPdf() {
                     {item.status === "loading"
                       ? "Reading…"
                       : item.status === "error"
-                        ? "Couldn't read this image"
+                        ? (item.error ?? "Couldn't read this image")
                         : `${item.width} × ${item.height} · ${formatBytes(item.file.size)}`}
                   </p>
                 </div>
@@ -305,7 +352,10 @@ export function ImagesToPdf() {
               Images are placed in the order listed — the arrows set which page
               each one becomes. JPG and PNG files are embedded as-is (no quality
               loss, no recompression); other formats are converted to JPG first.
-              With A4 / Letter pages, the orientation follows each image.
+              Phone photos are rotated upright automatically. With “Fit each
+              image”, pages are sized at 96 DPI and capped at a 20-inch longest
+              side so printers and upload portals accept the file; with A4 /
+              Letter pages, the orientation follows each image.
             </p>
           </div>
 

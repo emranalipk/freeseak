@@ -6,7 +6,7 @@
  * slider trades file size against sharpness (2× ≈ 144 DPI print-safe).
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import {
@@ -31,6 +31,7 @@ import {
 } from "./pdf-utils";
 import {
   canvasToBlob,
+  destroyPdfJsDoc,
   openWithPdfJs,
   renderPdfPage,
 } from "./pdf-render";
@@ -43,10 +44,11 @@ const FORMAT_OPTIONS: { value: Fmt; label: string }[] = [
 ];
 
 const SCALES = [
-  { value: "1", label: "1× — screen (72 DPI)" },
-  { value: "1.5", label: "1.5× — sharp screen" },
-  { value: "2", label: "2× — print-safe (144 DPI)" },
-  { value: "3", label: "3× — maximum detail" },
+  { value: "1", label: "72 DPI — screen" },
+  { value: "1.5", label: "108 DPI — sharp screen" },
+  { value: "2", label: "144 DPI — print-safe" },
+  { value: "3", label: "216 DPI — near-print" },
+  { value: "4.1667", label: "300 DPI — true print quality" },
 ];
 
 export function PdfToImages() {
@@ -63,10 +65,19 @@ export function PdfToImages() {
   const canRun =
     pdf !== null && parsed !== null && parsed.valid && parsed.pages.length > 0;
 
+  /* preview object URLs of the previous run — revoked when a new run or a
+     reset replaces them, so a 500-page re-run never leaks thumbnails */
+  const previewsRef = useRef<string[]>([]);
+  const revokePreviews = () => {
+    previewsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    previewsRef.current = [];
+  };
+
   const run = async () => {
     if (!pdf || !parsed || !canRun) return;
     setBusy(true);
     setResults([]);
+    revokePreviews();
     const pages =
       parsed.pages.length > 0 ? parsed.pages : Array.from({ length: pdf.pageCount }, (_, i) => i);
     setProgress({ done: 0, total: pages.length });
@@ -76,14 +87,19 @@ export function PdfToImages() {
       const doc = await openWithPdfJs(bytes);
       const ext = format === "image/png" ? "png" : "jpg";
       const base = pdf.file.name.replace(/\.pdf$/i, "");
+      /* pad page numbers to the document's real digit count so file
+         managers sort them in order (page-100 after page-99, not page-20) */
+      const pad = String(pdf.pageCount).length;
       const files: OutputFile[] = [];
       for (let i = 0; i < pages.length; i++) {
         const pageIndex = pages[i];
         const rendered = await renderPdfPage(doc, pageIndex + 1, parseFloat(scale));
         const blob = await canvasToBlob(rendered.canvas, format, 0.92);
+        rendered.canvas.width = 0;
+        rendered.canvas.height = 0;
         files.push({
           blob,
-          name: `${base}-page-${String(pageIndex + 1).padStart(2, "0")}.${ext}`,
+          name: `${base}-page-${String(pageIndex + 1).padStart(pad, "0")}.${ext}`,
           previewUrl: URL.createObjectURL(blob),
           note: `${rendered.width} × ${rendered.height} px`,
         });
@@ -91,7 +107,8 @@ export function PdfToImages() {
         /* keep the UI responsive between pages */
         await new Promise((r) => setTimeout(r, 0));
       }
-      await doc.cleanup();
+      await destroyPdfJsDoc(doc);
+      previewsRef.current = files.map((f) => f.previewUrl as string);
       setResults(files);
       toast.success(`${files.length} image${files.length > 1 ? "s" : ""} created`, {
         description: "Processed on your device — nothing was uploaded.",
@@ -170,9 +187,11 @@ export function PdfToImages() {
               </div>
             </div>
             <p className="text-[12px] leading-relaxed text-muted-foreground">
-              Each page is rasterised into a standalone image. 2× is sharp
-              enough for printing and most uses; 3× is for zooming into
-              detail. Multiple images download together as a single .zip.
+              Each page is rasterised into a standalone image at the DPI you
+              pick. 144 DPI is sharp enough for printing and most uses; 300 DPI
+              is true print quality for fine detail. Very large pages are kept
+              inside the browser-safe canvas automatically. Multiple images
+              download together as a single .zip.
             </p>
           </div>
 
@@ -197,6 +216,7 @@ export function PdfToImages() {
             onClear={() => {
               reset();
               setRange("");
+              revokePreviews();
               setResults([]);
             }}
             clearDisabled={false}

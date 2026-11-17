@@ -19,7 +19,7 @@ export default function NotFound() {
           still right where you left it.
         </p>
         <Link
-          href="/"
+          href="/tools"
           className="mt-6 inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-[14px] font-bold text-white shadow-sm transition hover:-translate-y-px dark:bg-[#22477F]"
         >
           Back to all tools

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PageSection, StaticPage } from "@/components/site/static-page";
+import { TOOLS } from "@/lib/tools";
 import {
   CONTACT_EMAIL,
   OPERATOR_EXPERIENCE,
@@ -54,18 +55,24 @@ export default function AboutPage() {
         <p>
           When you use a FreeSeak tool, the work happens locally: a QR code is
           drawn by your browser, text is counted as you type, calculations run
-          on your machine, images are compressed and resized on the spot. The
-          only thing that travels over the internet is the page itself. The
-          one thing stored is your &quot;recent tools&quot; row, which lives
-          in your own browser storage and never leaves it.
+          on your machine, images are compressed and resized on the spot, PDFs
+          are edited without a server ever seeing a page. The only thing that
+          travels over the internet is the page itself. What stays in your
+          browser&apos;s own storage, and never leaves it: your recent-tools
+          row; the Registry Estimator&apos;s saved profile and estimate
+          history (only if you choose to save them); and the Enhance tool&apos;s
+          slider settings.
         </p>
       </PageSection>
 
       <PageSection heading="What's live today">
         <p>
-          Six tools are live and working: the QR Code Generator, Word Counter,
-          Percentage Calculator, Age Calculator, Image Compressor and Image
-          Resizer. Missing a tool you need?{" "}
+          {TOOLS.length} tools are live and working — the full PDF suite
+          (editor, merge, split, compress and more), six image tools including
+          the Enhance &amp; Upscale workshop and a complete Favicon Generator,
+          a bilingual Punjab Registry Estimator with English and اردو, plus
+          calculators and everyday productivity tools like the QR Code
+          Generator and Word Counter. Missing a tool you need?{" "}
           <a
             href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
               "FreeSeak tool request",
@@ -96,7 +103,7 @@ export default function AboutPage() {
           Ready when you are
         </p>
         <p className="mt-1.5 text-[13.5px] text-muted-foreground">
-          Six tools, zero uploads, nothing to install.
+          {TOOLS.length} tools, zero uploads, nothing to install.
         </p>
         <Link
           href="/tools"

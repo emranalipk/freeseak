@@ -31,6 +31,7 @@ import {
   encodeImage,
   formatBytes,
   loadImageFile,
+  MAX_CANVAS_PIXELS,
   outputFilename,
   resolveMime,
   zipAndDownload,
@@ -127,6 +128,22 @@ export function ImageResizer() {
 
   const updateItem = useCallback((id: number, patch: Partial<QueueItem>) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+  }, []);
+
+  /* settings changed → finished results are stale; requeue them so the
+     next Resize run applies the new settings (same pattern as the Image
+     Converter). Passthrough results share the queue thumbnail's object
+     URL — only revoke result URLs the tool created itself. */
+  const requeueDone = useCallback(() => {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.status !== "done" || !item.result) return item;
+        if (item.result.previewUrl !== item.previewUrl) {
+          URL.revokeObjectURL(item.result.previewUrl);
+        }
+        return { ...item, status: "queued" as const, result: undefined };
+      }),
+    );
   }, []);
 
   const addFiles = useCallback(
@@ -343,6 +360,11 @@ export function ImageResizer() {
             encoded.width === item.width &&
             encoded.height === item.height &&
             encoded.blob.size >= item.file.size;
+          /* the browser canvas cap can silently shrink a huge exact size —
+             say so plainly when the output is smaller than requested */
+          const capped =
+            (target.width > encoded.width || target.height > encoded.height) &&
+            !target.skip;
           outcome = keepOriginal
             ? {
                 blob: item.file,
@@ -360,7 +382,12 @@ export function ImageResizer() {
                 width: encoded.width,
                 height: encoded.height,
                 mime: encoded.mime,
-                note: [target.note, gif ? GIF_NOTE : undefined]
+                note: [
+                  capped
+                    ? `The browser canvas caps at ~${Math.round(MAX_CANVAS_PIXELS / 1_000_000)} megapixels — the output was scaled to ${encoded.width} × ${encoded.height} to stay safe.`
+                    : target.note,
+                  gif ? GIF_NOTE : undefined,
+                ]
                   .filter(Boolean)
                   .join(" ") || undefined,
               };
@@ -461,7 +488,10 @@ export function ImageResizer() {
                 type="button"
                 role="tab"
                 aria-selected={mode === m.value}
-                onClick={() => setMode(m.value)}
+                onClick={() => {
+                  setMode(m.value);
+                  requeueDone();
+                }}
                 className={`flex items-center justify-center gap-1.5 rounded-lg px-1.5 py-2 text-[12px] font-bold transition-colors ${
                   mode === m.value
                     ? "bg-card text-foreground shadow-sm"
@@ -489,7 +519,7 @@ export function ImageResizer() {
                 max={400}
                 step={5}
                 value={percent}
-                onChange={(e) => setPercent(parseInt(e.target.value, 10))}
+                onChange={(e) => { setPercent(parseInt(e.target.value, 10)); requeueDone(); }}
                 className="h-2 w-full cursor-pointer accent-primary"
               />
               <div className="flex flex-wrap gap-1.5">
@@ -497,7 +527,7 @@ export function ImageResizer() {
                   <button
                     key={p}
                     type="button"
-                    onClick={() => setPercent(p)}
+                    onClick={() => { setPercent(p); requeueDone(); }}
                     className={`rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors ${
                       percent === p
                         ? "border-primary bg-secondary text-foreground"
@@ -517,7 +547,7 @@ export function ImageResizer() {
                 <Label htmlFor="ir-side">Set</Label>
                 <Select
                   value={side}
-                  onValueChange={(v) => setSide(v as "w" | "h")}
+                  onValueChange={(v) => { setSide(v as "w" | "h"); requeueDone(); }}
                 >
                   <SelectTrigger id="ir-side" className="w-full">
                     <SelectValue />
@@ -538,7 +568,7 @@ export function ImageResizer() {
                   min={1}
                   max={20000}
                   value={sidePx}
-                  onChange={(e) => setSidePx(e.target.value)}
+                  onChange={(e) => { setSidePx(e.target.value); requeueDone(); }}
                 />
               </div>
             </div>
@@ -555,7 +585,7 @@ export function ImageResizer() {
                     min={1}
                     max={20000}
                     value={exactW}
-                    onChange={(e) => setExactW(e.target.value)}
+                    onChange={(e) => { setExactW(e.target.value); requeueDone(); }}
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -566,13 +596,13 @@ export function ImageResizer() {
                     min={1}
                     max={20000}
                     value={exactH}
-                    onChange={(e) => setExactH(e.target.value)}
+                    onChange={(e) => { setExactH(e.target.value); requeueDone(); }}
                   />
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setKeepAspect((v) => !v)}
+                onClick={() => { setKeepAspect((v) => !v); requeueDone(); }}
                 className={`self-start rounded-full border px-3.5 py-1.5 text-[12px] font-bold transition-colors ${
                   keepAspect
                     ? "border-primary bg-secondary text-foreground"
@@ -583,6 +613,15 @@ export function ImageResizer() {
                   ? "Keep aspect ratio — centred crop (recommended)"
                   : "Stretch to fill — may distort"}
               </button>
+              {toPx(exactW) * toPx(exactH) > MAX_CANVAS_PIXELS && (
+                <p className="text-[12px] leading-relaxed text-amber-700 dark:text-amber-400">
+                  Browsers cap canvases at ~
+                  {Math.round(MAX_CANVAS_PIXELS / 1_000_000)} megapixels — that
+                  exact size will be scaled down to stay safe. Pick a size
+                  under {Math.round(MAX_CANVAS_PIXELS / 1_000_000)} MP or do it
+                  in two steps.
+                </p>
+              )}
             </div>
           )}
 
@@ -596,7 +635,7 @@ export function ImageResizer() {
                   min={1}
                   max={20000}
                   value={fitW}
-                  onChange={(e) => setFitW(e.target.value)}
+                  onChange={(e) => { setFitW(e.target.value); requeueDone(); }}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -607,7 +646,7 @@ export function ImageResizer() {
                   min={1}
                   max={20000}
                   value={fitH}
-                  onChange={(e) => setFitH(e.target.value)}
+                  onChange={(e) => { setFitH(e.target.value); requeueDone(); }}
                 />
               </div>
             </div>
@@ -619,7 +658,7 @@ export function ImageResizer() {
                 <button
                   key={p.key}
                   type="button"
-                  onClick={() => setPresetKey(p.key)}
+                  onClick={() => { setPresetKey(p.key); requeueDone(); }}
                   className={`rounded-xl border p-3 text-left transition-colors ${
                     presetKey === p.key
                       ? "border-primary bg-secondary"
@@ -641,7 +680,7 @@ export function ImageResizer() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="ir-format">Output format</Label>
-              <Select value={format} onValueChange={(v) => setFormat(v as FormatChoice)}>
+              <Select value={format} onValueChange={(v) => { setFormat(v as FormatChoice); requeueDone(); }}>
                 <SelectTrigger id="ir-format" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -676,7 +715,7 @@ export function ImageResizer() {
                   max={100}
                   step={1}
                   value={qualityPct}
-                  onChange={(e) => setQualityPct(parseInt(e.target.value, 10))}
+                  onChange={(e) => { setQualityPct(parseInt(e.target.value, 10)); requeueDone(); }}
                   className="h-2 w-full cursor-pointer accent-primary"
                 />
               </div>
@@ -691,7 +730,7 @@ export function ImageResizer() {
                   id="ir-matte"
                   type="color"
                   value={matte}
-                  onChange={(e) => setMatte(e.target.value)}
+                  onChange={(e) => { setMatte(e.target.value); requeueDone(); }}
                   className="size-7 cursor-pointer rounded-md border-0 bg-transparent p-0"
                   aria-label="Background colour for transparent areas"
                 />
@@ -709,7 +748,7 @@ export function ImageResizer() {
             <input
               type="checkbox"
               checked={allowEnlarging}
-              onChange={(e) => setAllowEnlarging(e.target.checked)}
+              onChange={(e) => { setAllowEnlarging(e.target.checked); requeueDone(); }}
               className="size-4 cursor-pointer accent-primary"
             />
             Allow enlarging — upscale smaller images instead of keeping them

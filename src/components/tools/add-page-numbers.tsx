@@ -78,7 +78,7 @@ export function AddPageNumbers() {
     setBusy(true);
     setResults([]);
     try {
-      const { StandardFonts, rgb } = await loadPdfLib();
+      const { StandardFonts, rgb, degrees } = await loadPdfLib();
       const source = await loadPdf(pdf.file);
       const font = await source.doc.embedFont(StandardFonts.Helvetica);
       const rgbColor = hexToRgb(color) ?? { r: 0.2, g: 0.25, b: 0.3 };
@@ -86,20 +86,48 @@ export function AddPageNumbers() {
       const numbered = skipFirst
         ? source.doc.getPages().slice(1)
         : source.doc.getPages();
-      const total = numbered.length;
+      /* the denominator is the LAST number used, so start=41 on 12 pages
+         reads "41 / 52" — never "41 / 12" */
+      const lastNumber = start + numbered.length - 1;
 
       numbered.forEach((page, i) => {
-        const label = labelFor(format, start + i, total);
+        const label = labelFor(format, start + i, lastNumber);
         const { width, height } = page.getSize();
         const textWidth = font.widthOfTextAtSize(label, size);
-        const pos = anchorPosition(anchor, width, height, margin, textWidth, size);
-        /* small optical lift: pdf-lib's y is the text baseline */
+        const rot = ((page.getRotation().angle % 360) + 360) % 360;
+        const swapped = rot === 90 || rot === 270;
+        /* anchor on the page as the reader sees it, then map into user
+           space — the same display→user mapping the Edit PDF burner uses */
+        const visW = swapped ? height : width;
+        const visH = swapped ? width : height;
+        const pos = anchorPosition(anchor, visW, visH, margin, textWidth, size);
+        const yVis = pos.y + 2; // small optical lift: y is the text baseline
+        let px: number;
+        let py: number;
+        let deg = 0;
+        if (rot === 90) {
+          px = visH - yVis;
+          py = pos.x;
+          deg = 270;
+        } else if (rot === 180) {
+          px = visW - pos.x;
+          py = visH - yVis;
+          deg = 180;
+        } else if (rot === 270) {
+          px = yVis;
+          py = visW - pos.x;
+          deg = 90;
+        } else {
+          px = pos.x;
+          py = yVis;
+        }
         page.drawText(label, {
-          x: pos.x,
-          y: pos.y + 2,
+          x: px,
+          y: py,
           size,
           font,
           color: rgb(rgbColor.r, rgbColor.g, rgbColor.b),
+          ...(deg !== 0 ? { rotate: degrees(deg) } : {}),
         });
       });
 
@@ -109,7 +137,7 @@ export function AddPageNumbers() {
         {
           blob,
           name: `${base}-numbered.pdf`,
-          note: `${total} page${total > 1 ? "s" : ""} numbered, starting at ${start}${
+          note: `${numbered.length} page${numbered.length > 1 ? "s" : ""} numbered, ${start}–${lastNumber}${
             skipFirst ? " (cover page left untouched)" : ""
           }`,
         },
@@ -271,11 +299,16 @@ export function AddPageNumbers() {
             </label>
 
             <p className="text-[12px] leading-relaxed text-muted-foreground">
-              Preview: page 3 of a 12-page document reads{" "}
+              Preview: the last numbered page reads{" "}
               <span className="font-semibold text-foreground">
-                {labelFor(format, 3, 12)}
+                {labelFor(
+                  format,
+                  Math.max(0, start + (skipFirst ? pdf.pageCount - 1 : pdf.pageCount) - 1),
+                  Math.max(0, start + (skipFirst ? pdf.pageCount - 1 : pdf.pageCount) - 1),
+                )}
               </span>
-              . Numbering runs over every page in the document.
+              . Numbering runs over every page in the document, and rotated
+              pages keep the number upright.
             </p>
           </div>
 

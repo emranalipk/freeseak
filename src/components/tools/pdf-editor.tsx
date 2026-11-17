@@ -399,6 +399,10 @@ export function PdfEditor() {
       return await pdfjs.getDocument({
         data: new Uint8Array(bytes),
         ...(password ? { password } : {}),
+        /* local cMaps + standard fonts — same assets the shared loader uses */
+        cMapUrl: "/pdfjs/cmaps/",
+        cMapPacked: true,
+        standardFontDataUrl: "/pdfjs/standard_fonts/",
       }).promise;
     } catch (err) {
       const name = String((err as { name?: string })?.name ?? "");
@@ -553,7 +557,12 @@ export function PdfEditor() {
       const edited = await doc.save({ useObjectStreams: true });
       if (gen !== previewGenRef.current) return;
       const pdfjs = await loadPdfJs();
-      const newDoc = await pdfjs.getDocument({ data: new Uint8Array(edited) }).promise;
+      const newDoc = await pdfjs.getDocument({
+        data: new Uint8Array(edited),
+        cMapUrl: "/pdfjs/cmaps/",
+        cMapPacked: true,
+        standardFontDataUrl: "/pdfjs/standard_fonts/",
+      }).promise;
       const old = pdfDocRef.current;
       pdfDocRef.current = newDoc;
       setRenderTick((t) => t + 1);

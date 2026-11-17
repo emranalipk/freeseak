@@ -33,12 +33,30 @@ export default function PrivacyPolicyPage() {
 
       <PageSection heading="2. Information stored on your device">
         <p>
-          The site keeps one small piece of information in your browser&apos;s
-          local storage: the list of tools you used recently, so the
-          &quot;pick up where you left off&quot; row can show them. This list
-          never leaves your device, and you can remove it at any time by
-          clearing your browser storage for freeseak.com. No cookies are set
-          for this purpose.
+          Three small things can be kept in your browser&apos;s local storage —
+          all of them stay on your device, never leave it, and can be removed
+          at any time by clearing your browser storage for freeseak.com:
+        </p>
+        <ul className="ml-4 list-disc space-y-1.5">
+          <li>
+            The list of tools you used recently, so the &quot;pick up where you
+            left off&quot; row can show them.
+          </li>
+          <li>
+            The Punjab Registry Estimator&apos;s saved details: your
+            My&nbsp;Profile fields (name, firm, phone, address — only if you
+            fill them in) and an estimate history that can include the names
+            and shares of buyers and sellers you typed. These exist only on
+            your device because the estimator runs there; nothing is synced or
+            backed up anywhere.
+          </li>
+          <li>
+            The Enhance Image tool&apos;s slider settings, so your preferred
+            look is remembered next time.
+          </li>
+        </ul>
+        <p>
+          No cookies are set for any of these purposes.
         </p>
       </PageSection>
 

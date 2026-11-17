@@ -324,7 +324,13 @@ export function EnhanceTool() {
             }
           })
           .catch(() => {});
-        showNotice('ok', `Image ready — ${prep.origW} × ${prep.origH} px · ${formatBytes(prep.fileBytes)} · processed on your device`);
+        showNotice(
+          'ok',
+          `Image ready — ${prep.origW} × ${prep.origH} px · ${formatBytes(prep.fileBytes)} · processed on your device` +
+            (prep.downscaled
+              ? ` · over the 16 MP processing cap, so the base size is reduced to ${prep.fullData.width} × ${prep.fullData.height}`
+              : ''),
+        );
       } catch (err) {
         showNotice('error', `Could not read this image: ${err instanceof Error ? err.message : 'unknown error'}`);
       } finally {
@@ -412,9 +418,18 @@ export function EnhanceTool() {
   };
 
   const encodeResult = async (res: { data: Uint8ClampedArray; width: number; height: number }) => {
-    const ctx = imageDataToCanvas(toImageData(res.data, res.width, res.height)).getContext('2d');
+    const canvas = imageDataToCanvas(toImageData(res.data, res.width, res.height));
+    const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas 2D is not available.');
     const meta = FORMAT_META[format];
+    if (meta.mime === 'image/jpeg') {
+      /* JPG has no alpha — matte behind the image or transparent areas
+         (PNG logos with transparency) come out black */
+      ctx.globalCompositeOperation = 'destination-over';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = 'source-over';
+    }
     const blob = await new Promise<Blob | null>((resolve) =>
       ctx.canvas.toBlob(resolve, meta.mime, meta.lossy ? quality / 100 : undefined)
     );

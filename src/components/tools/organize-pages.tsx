@@ -14,6 +14,7 @@ import {
   RotateCcw,
   RotateCw,
   Trash2,
+  Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ import {
   pdfErrorMessage,
   savePdf,
 } from "./pdf-utils";
-import { openWithPdfJs, renderPdfPage } from "./pdf-render";
+import { destroyPdfJsDoc, openWithPdfJs, renderPdfPage } from "./pdf-render";
 
 interface PageEntry {
   key: number;
@@ -51,9 +52,29 @@ export function OrganizePages() {
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState<OutputFile[]>([]);
   const cancelledRef = useRef(false);
+  /* undo history: snapshots of the page arrangement (deletes included) */
+  const pagesRef = useRef<PageEntry[]>([]);
+  useEffect(() => {
+    pagesRef.current = pages;
+  }, [pages]);
+  const historyRef = useRef<PageEntry[][]>([]);
+  const [historyLen, setHistoryLen] = useState(0);
 
   const pdf = state.status === "ready" ? state.pdf : null;
   const thumbsLoading = pdf !== null && thumbsDone < pdf.pageCount;
+
+  const pushHistory = useCallback(() => {
+    historyRef.current = [...historyRef.current.slice(-49), pagesRef.current];
+    setHistoryLen(historyRef.current.length);
+  }, []);
+
+  const undo = useCallback(() => {
+    const prev = historyRef.current.pop();
+    if (!prev) return;
+    setHistoryLen(historyRef.current.length);
+    setPages(prev);
+    setSelected(new Set());
+  }, []);
 
   /* paint the thumbnails as soon as a document arrives */
   useEffect(() => {
@@ -67,17 +88,25 @@ export function OrganizePages() {
         const entries: PageEntry[] = [];
         for (let i = 0; i < loaded.pageCount; i++) {
           const rendered = await renderPdfPage(doc, i + 1, 0.22);
-          if (cancelledRef.current) break;
+          if (cancelledRef.current) {
+            rendered.canvas.width = 0;
+            rendered.canvas.height = 0;
+            break;
+          }
           entries.push({
             key: i,
             srcIndex: i,
             rotation: 0,
             thumb: rendered.canvas.toDataURL("image/jpeg", 0.75),
           });
+          rendered.canvas.width = 0;
+          rendered.canvas.height = 0;
           setPages([...entries]);
           setThumbsDone(i + 1);
+          /* yield to the UI so long documents stay responsive */
+          await new Promise((r) => setTimeout(r, 0));
         }
-        await doc.cleanup();
+        await destroyPdfJsDoc(doc);
       } catch {
         toast.error("Couldn't render the page previews — the PDF may be damaged.");
       }
@@ -97,6 +126,8 @@ export function OrganizePages() {
   };
 
   const rotateSelected = (dir: 90 | -90) => {
+    if (selected.size === 0) return;
+    pushHistory();
     setPages((prev) =>
       prev.map((p) =>
         selected.has(p.key)
@@ -107,23 +138,30 @@ export function OrganizePages() {
   };
 
   const deleteSelected = () => {
+    if (selected.size === 0) return;
+    pushHistory();
     setPages((prev) => prev.filter((p) => !selected.has(p.key)));
     setSelected(new Set());
   };
 
-  const move = useCallback((key: number, dir: -1 | 1) => {
-    setPages((prev) => {
-      const index = prev.findIndex((p) => p.key === key);
-      const target = index + dir;
-      if (index < 0 || target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
-  }, []);
+  const move = useCallback(
+    (key: number, dir: -1 | 1) => {
+      pushHistory();
+      setPages((prev) => {
+        const index = prev.findIndex((p) => p.key === key);
+        const target = index + dir;
+        if (index < 0 || target < 0 || target >= prev.length) return prev;
+        const next = [...prev];
+        [next[index], next[target]] = [next[target], next[index]];
+        return next;
+      });
+    },
+    [pushHistory],
+  );
 
   const dropOn = (targetKey: number) => {
     if (dragKey === null || dragKey === targetKey) return;
+    pushHistory();
     setPages((prev) => {
       const from = prev.findIndex((p) => p.key === dragKey);
       const to = prev.findIndex((p) => p.key === targetKey);
@@ -139,6 +177,8 @@ export function OrganizePages() {
   const restart = () => {
     reset();
     setPages([]);
+    historyRef.current = [];
+    setHistoryLen(0);
     setThumbsDone(0);
     setSelected(new Set());
     setResults([]);
@@ -158,7 +198,8 @@ export function OrganizePages() {
       );
       copied.forEach((page, i) => {
         const original = page.getRotation().angle ?? 0;
-        page.setRotation(degrees((original + pages[i].rotation) % 360));
+        /* normalise into 0–359: exotic files can store negative angles */
+        page.setRotation(degrees((((original + pages[i].rotation) % 360) + 360) % 360));
         out.addPage(page);
       });
       const blob = await savePdf(out);
@@ -250,6 +291,16 @@ export function OrganizePages() {
             >
               <RotateCw className="size-3.5" aria-hidden="true" />
               Right
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={historyLen === 0}
+              onClick={undo}
+            >
+              <Undo2 className="size-3.5" aria-hidden="true" />
+              Undo
             </Button>
             <Button
               type="button"

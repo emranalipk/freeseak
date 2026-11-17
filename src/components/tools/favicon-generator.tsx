@@ -91,6 +91,7 @@ export function FaviconGenerator() {
     url: string;
   } | null>(null);
   const [siteName, setSiteName] = useState("");
+  const [touchBg, setTouchBg] = useState("#FFFFFF");
   const [pack, setPack] = useState<Pack | null>(null);
   const [busy, setBusy] = useState(false);
   const [zipping, setZipping] = useState(false);
@@ -130,13 +131,17 @@ export function FaviconGenerator() {
     try {
       const pngs: Pack["pngs"] = [];
       for (const { size, file } of PNG_SIZES) {
-        /* centre-crop to a square at each size (cover fit) */
+        /* centre-crop to a square at each size (cover fit). The apple-touch
+           icon is flattened: iOS composites transparent PNGs onto BLACK on
+           home screens, so a transparent logo ships with an ugly black tile */
+        const isAppleTouch = file === "apple-touch-icon.png";
         const encoded = await encodeImage(loaded.img, {
           width: size,
           height: size,
           fit: "cover",
           mime: "image/png",
           quality: 1,
+          ...(isAppleTouch ? { background: touchBg } : {}),
         });
         const url = URL.createObjectURL(encoded.blob);
         urlsRef.current.push(url);
@@ -156,8 +161,8 @@ export function FaviconGenerator() {
         pngs,
         totalBytes,
         note:
-          smallestSide < 192
-            ? `Your image is ${smallestSide} px on its short side — the 192 and 512 px icons are upscaled and may look soft. A square image of at least 512 × 512 px gives the sharpest pack.`
+          smallestSide < 512
+            ? `Your image is ${smallestSide} px on its short side — every icon larger than that (192 and 512 px) is upscaled and may look soft. A square image of at least 512 × 512 px gives the sharpest pack.`
             : undefined,
       });
       toast.success("Favicon pack ready", {
@@ -170,7 +175,7 @@ export function FaviconGenerator() {
     } finally {
       setBusy(false);
     }
-  }, [loaded, busy]);
+  }, [loaded, busy, touchBg]);
 
   const download = useCallback(async () => {
     if (!pack || zipping) return;
@@ -285,6 +290,26 @@ https://freeseak.com
                 placeholder="My Site"
                 className="mt-1.5"
               />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="touch-bg">iOS tile background</Label>
+              <div className="flex items-center gap-2 rounded-lg border border-input px-2.5 py-1.5">
+                <input
+                  id="touch-bg"
+                  type="color"
+                  value={touchBg}
+                  onChange={(e) => setTouchBg(e.target.value)}
+                  className="size-7 cursor-pointer rounded-md border-0 bg-transparent p-0"
+                  aria-label="Background colour for the apple-touch icon"
+                />
+                <span className="font-mono text-[12.5px] uppercase text-muted-foreground">
+                  {touchBg}
+                </span>
+              </div>
+              <p className="max-w-56 text-[11px] leading-relaxed text-muted-foreground">
+                iOS fills transparent home-screen icons with black — the
+                apple-touch icon is flattened onto this colour to prevent that.
+              </p>
             </div>
             <Button
               type="button"

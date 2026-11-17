@@ -74,7 +74,7 @@ export function SiteFooter() {
           <span>Seek &amp; Done</span>
           <span className="opacity-40">·</span>
           <span>Every tool free, every file yours</span>
-          <span className="ml-auto hidden gap-3 sm:flex">
+          <span className="ml-auto flex flex-wrap gap-3">
             {PAGES.map((p) => (
               <Link
                 key={p.href}

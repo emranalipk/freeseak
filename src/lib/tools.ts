@@ -139,7 +139,7 @@ export const TOOLS: ToolDef[] = [
       },
       {
         q: "Will merging reduce the quality of my PDFs?",
-        a: "No. Pages are copied into the new document byte-for-byte — text stays selectable, images keep their resolution, and forms or links keep working.",
+        a: "No. Pages are copied into the new document byte-for-byte — text stays selectable, images keep their resolution, and hyperlinks keep working. One honest exception: fillable form fields are the one thing a cross-file merge can drop. If your PDFs have forms to fill, fill them first (the Edit PDF tool does exactly that) and then merge — the filled appearance comes through.",
       },
       {
         q: "Is it safe to merge confidential documents here?",
@@ -198,7 +198,7 @@ export const TOOLS: ToolDef[] = [
     keywords:
       "jpg to pdf png to pdf image to pdf convert images to pdf photo to pdf make a pdf from pictures multiple images into one pdf picture to pdf document scan to pdf jpeg to pdf free no watermark no sign up",
     intro:
-      "Turn photos and scans into a single, shareable PDF. Drag your JPGs and PNGs in, set the order with the arrows, and choose how they sit on the page: fitted to each image with no borders, or centred on A4 / Letter pages with a margin — handy for printing and for upload portals that demand “a PDF”. JPG and PNG files are embedded without recompression, so quality is exactly what you started with. Everything runs in your browser: your photos never touch a server.",
+      "Turn photos and scans into a single, shareable PDF. Drag your JPGs and PNGs in, set the order with the arrows, and choose how they sit on the page: fitted to each image with no borders, or centred on A4 / Letter pages with a margin — handy for printing and for upload portals that demand “a PDF”. JPG and PNG files are embedded without recompression — and phone photos are rotated upright automatically — so quality and orientation are exactly what you started with. Everything runs in your browser: your photos never touch a server.",
     howTo: [
       "Drop your images in, browse, or paste them — JPG, PNG, WebP, GIF and more.",
       "Arrange the order; each image becomes one page, in the order shown.",
@@ -237,13 +237,13 @@ export const TOOLS: ToolDef[] = [
       "Turn PDF pages into standalone PNG or JPG images — perfect for slides as social posts, a page for a presentation, or an image a portal insists on. Pick the pages, the format and the resolution: 1.5× looks crisp on screens, 2× (144 DPI) is print-safe, 3× stands up to zooming. Pages are rendered by your own browser, and a progress bar keeps you company on long documents. Multiple pages arrive as a single .zip.",
     howTo: [
       "Drop in your PDF.",
-      "Choose the pages, the format (PNG for sharp text, JPG for smaller photo files) and the resolution.",
+      "Choose the pages, the format (PNG for sharp text, JPG for smaller photo files) and the DPI — up to true 300 DPI print quality.",
       "Press Convert — each page becomes an image; download them one by one or all together as a .zip.",
     ],
     faq: [
       {
         q: "What resolution should I pick?",
-        a: "1.5× is plenty for screens and email. Choose 2× (144 DPI) when the image will be printed or projected; 3× is for zooming into fine print. Higher resolution means bigger files — the trade-off is yours.",
+        a: "108 DPI is plenty for screens and email. Choose 144 DPI when the image will be printed or projected; 300 DPI is true print quality for zooming into fine print. Higher resolution means bigger files — the trade-off is yours.",
       },
       {
         q: "PNG or JPG — which one?",
@@ -395,7 +395,7 @@ export const TOOLS: ToolDef[] = [
       },
       {
         q: "Can I extract text from a locked PDF?",
-        a: "From PDFs that merely disallow copying: usually yes — the text layer is read directly. PDFs that require a password to open cannot be processed; remove the protection first.",
+        a: "Not if it is encrypted — a password-protected PDF (even one that only restricts printing or copying, not opening) is stopped with a clear message, because the engine refuses encrypted files outright. Remove the protection first, or use the Edit PDF tool, which can open a protected file when you type its password.",
       },
       {
         q: "Is my document's text sent anywhere?",
@@ -435,7 +435,7 @@ export const TOOLS: ToolDef[] = [
       },
       {
         q: "What about the creation and modification dates?",
-        a: "They are rewritten with the save, like any PDF editor does. Metadata you cleared stays cleared — the download is your scrubbed copy, and the original file on your disk is never modified.",
+        a: "They are rewritten with the save, like any PDF editor does. The scrub also removes the XMP metadata packet that modern PDFs carry alongside the classic fields — so your file ships without its old identity. One deliberate leftover: every FreeSeak-generated PDF is stamped “FreeSeak (freeseak.com)” as its producer — the same visible-in-properties signature all our downloads carry. The original file on your disk is never modified.",
       },
     ],
   },
@@ -450,7 +450,7 @@ export const TOOLS: ToolDef[] = [
     keywords:
       "compress pdf reduce pdf file size make pdf smaller pdf compressor shrink pdf compress pdf without losing quality pdf size reducer pdf too big for email compress pdf to 100kb 200kb free no limit batch compress",
     intro:
-      "Make PDFs smaller — with the honesty the big tools skip. Safe mode re-packs the file internally: text stays text, quality stays identical, and savings depend on how bloated the original was. Strong mode rebuilds each page as an image at the resolution you choose — the big cuts (often 40–80%) that make email attachments and upload portals happy — and tells you plainly that text stops being selectable. Either way you see before → after sizes per file, and if a file cannot be beaten, you get your original back untouched with a note, never a worse file.",
+      "Make PDFs smaller — with the honesty the big tools skip. Safe mode re-packs the file internally: text stays text, quality stays identical, and savings depend on how bloated the original was. Strong mode rebuilds each page as an image at the resolution you choose — the big cuts (often 40–80%) that make email attachments and upload portals happy — and tells you plainly that text stops being selectable. Or set an exact target: Target mode searches DPI and quality combinations until your file fits a budget like 100 KB, handing back the highest quality that fits (or the closest possible, with an honest note). Either way you see before → after sizes per file, and if a file cannot be beaten, you get your original back untouched with a note, never a worse file.",
     howTo: [
       "Drop in one PDF or a whole batch.",
       "Pick a mode — Safe (keep text as text) or Strong (rasterise pages for the biggest cuts), and set the resolution and quality for Strong.",
@@ -459,11 +459,11 @@ export const TOOLS: ToolDef[] = [
     faq: [
       {
         q: "Which mode should I choose?",
-        a: "Try Safe first — it can only help, never harm. If it is not enough and the PDF is for reading (not for text search or forms), go Strong: pick 120 DPI and quality 75 for email-sized files, or 150 DPI if the document will be printed.",
+        a: "Try Safe first — it can only help, never harm. Need a specific size for an upload portal or email limit? Use Target: type 100 KB, 200 KB or any budget and the tool finds the highest quality that fits. If the PDF is for reading (not for text search or forms), Strong gives you manual control of DPI and quality: pick 120 DPI and quality 75 for email-sized files, or 150 DPI if the document will be printed.",
       },
       {
         q: "How much smaller will my PDF get?",
-        a: "Safe mode: usually 5–20% on bloated files, sometimes nothing on already-optimized ones — and you are told exactly which. Strong mode: typically 40–80%, because pages become optimized JPEG images. Every result shows its real numbers.",
+        a: "Safe mode: usually 5–20% on bloated files, sometimes nothing on already-optimized ones — and you are told exactly which. Strong mode: typically 40–80%, because pages become optimized JPEG images. Target mode: whatever your budget is — every result shows its real numbers, and impossible budgets return the closest achievable size with a note, never an error.",
       },
       {
         q: "Will compressing damage my document?",
@@ -653,7 +653,7 @@ export const TOOLS: ToolDef[] = [
     faq: [
       {
         q: "Does cropping reduce the quality of my image?",
-        a: "No. Cropping just selects pixels — the part you keep is saved at its original, full resolution. Only the format choice matters: saving as JPG or WebP re-compresses, PNG is lossless.",
+        a: "No. Cropping just selects pixels — the part you keep is saved at its original, full resolution. The one honest exception: images larger than the browser's ~16-megapixel canvas cap are scaled to the largest browser-safe size, and the tool tells you when that happens. Only the format choice otherwise matters: saving as JPG or WebP re-compresses, PNG is lossless.",
       },
       {
         q: "Can I crop to an exact ratio like 1:1 or 16:9?",

@@ -325,7 +325,11 @@ export function ImageCropper() {
       const base = loaded.file.name.replace(/\.[^.]+$/, "") || "image";
       downloadBlob(blob, `${base}${suffix}.${extForMime(mime)}`);
       toast.success("Saved to your device", {
-        description: `${cw} × ${ch} px · ${formatBytes(blob.size)} — processed on your device.`,
+        description:
+          `${cw} × ${ch} px · ${formatBytes(blob.size)} — processed on your device.` +
+          (scale < 1
+            ? ` Scaled to the browser's ~${Math.round(MAX_OUTPUT_PIXELS / 1_000_000)} MP canvas cap — the selection above it can't be delivered at full size.`
+            : ""),
       });
     } catch (err) {
       toast.error("Couldn't save the image", {
@@ -540,7 +544,16 @@ export function ImageCropper() {
           <p className="text-[12.5px] text-muted-foreground">
             <CropIcon className="mr-1 inline size-3.5" aria-hidden="true" />
             Selection: {Math.round(crop.w)} × {Math.round(crop.h)} px of{" "}
-            {rw} × {rh} px — the download is always full resolution.
+            {rw} × {rh} px —{" "}
+            {rw * rh > MAX_OUTPUT_PIXELS ? (
+              <span className="font-medium text-amber-700 dark:text-amber-400">
+                this image exceeds the browser&apos;s ~
+                {Math.round(MAX_OUTPUT_PIXELS / 1_000_000)} MP canvas cap, so the
+                download is scaled to the largest browser-safe size.
+              </span>
+            ) : (
+              "the download comes out at the full resolution of your selection."
+            )}
           </p>
         </section>
       )}

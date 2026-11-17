@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Command,
   CommandEmpty,
@@ -26,6 +26,7 @@ export function CommandPalette() {
   const paletteOpen = useToolStore((s) => s.paletteOpen);
   const setPalette = useToolStore((s) => s.setPalette);
   const router = useRouter();
+  const pathname = usePathname();
   const [query, setQuery] = useState("");
 
   const { results, close } = searchTools(query.trim());
@@ -37,11 +38,25 @@ export function CommandPalette() {
         e.preventDefault();
         setQuery("");
         setPalette(!paletteOpen);
+        return;
+      }
+      /* "/" opens the palette everywhere EXCEPT the homepage, where the
+         hero search box owns the key — so the "press / anywhere" promise
+         in the tools index holds true on every other page */
+      if (
+        e.key === "/" &&
+        pathname !== "/" &&
+        !((e.target as HTMLElement)?.tagName).match(/INPUT|TEXTAREA|SELECT/) &&
+        !(e.target as HTMLElement)?.isContentEditable
+      ) {
+        e.preventDefault();
+        setQuery("");
+        setPalette(true);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [paletteOpen, setPalette]);
+  }, [paletteOpen, setPalette, pathname]);
 
   const choose = (id: string) => {
     setQuery("");

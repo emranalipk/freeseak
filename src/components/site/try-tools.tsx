@@ -71,11 +71,21 @@ function LiveTag() {
   );
 }
 
-function TileHeading({ children }: { children: string }) {
+function TileHeading({ children, href }: { children: string; href?: string }) {
   return (
     <h3 className="flex items-center justify-between gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.13em] text-muted-foreground">
       {children}
-      <LiveTag />
+      <span className="flex items-center gap-2">
+        <LiveTag />
+        {href && (
+          <a
+            href={href}
+            className="normal-case tracking-normal text-primary hover:underline"
+          >
+            open the full tool →
+          </a>
+        )}
+      </span>
     </h3>
   );
 }
@@ -144,7 +154,7 @@ function FileRouter() {
           <input
             type="file"
             accept="application/pdf,image/*"
-            className="hidden"
+            className="sr-only"
             onChange={(e) => handle(e.target.files?.[0])}
           />
         </label>
@@ -208,11 +218,11 @@ function WordTile() {
   const [text, setText] = useState("");
   const words = (text.trim().match(/\S+/g) ?? []).length;
   const sentences = (text.match(/[^.!?]+[.!?]+/g) ?? []).length;
-  const sec = Math.round((words / 230) * 60);
+  const sec = Math.round((words / 200) * 60); /* 200 wpm — same number the tool and its FAQ use */
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
-      <TileHeading>Word Counter</TileHeading>
+      <TileHeading href="/tools/word-counter">Word Counter</TileHeading>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -254,7 +264,7 @@ function PercentTile() {
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
-      <TileHeading>Percentage</TileHeading>
+      <TileHeading href="/tools/percentage-calculator">Percentage</TileHeading>
       <div className="flex flex-wrap items-center gap-2 text-[14px]">
         <span>What is</span>
         <input
@@ -325,7 +335,7 @@ function AgeTile() {
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
-      <TileHeading>Age Calculator</TileHeading>
+      <TileHeading href="/tools/age-calculator">Age Calculator</TileHeading>
       <input
         value={dob}
         onChange={(e) => setDob(e.target.value)}

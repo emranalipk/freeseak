@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Search, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LogoSlot, Tagline, Wordmark } from "./logo";
+import { useToolStore } from "@/lib/tool-store";
 
 /* v0.3: "Tools" is a real index page (/tools) — crawlable and useful
    from every page. On phones the nav collapses to logo + Tools + theme. */
@@ -33,6 +34,14 @@ export function SiteHeader() {
         </Link>
 
         <nav className="ml-auto flex items-center gap-1" aria-label="Main">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Search tools (Ctrl+K)"
+            onClick={() => useToolStore.getState().setPalette(true)}
+          >
+            <Search className="size-[18px]" aria-hidden="true" />
+          </Button>
           {/* always-visible Tools link — the only nav a phone needs */}
           <Link
             href="/tools"

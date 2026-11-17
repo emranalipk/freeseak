@@ -85,6 +85,12 @@ interface HistEntry {
   areaName: string;
   buyers: PartyRow[];
   sellers: PartyRow[];
+  /* v1.0.0: the FBR toggles and "other expenses" are part of the estimate —
+     without them, reopening an entry and recalculating produced a
+     different grand total than the saved one */
+  btOn?: boolean;
+  stOn?: boolean;
+  othRaw?: { reg: string; fard: string; photo: string; misc: string; stampVendor: string };
 }
 
 interface Persisted {
@@ -97,7 +103,10 @@ interface Persisted {
 const STORAGE_KEY = "freeseak.registry.v1";
 
 function pf(v: string): number {
-  return parseFloat(v) || 0;
+  /* Pakistan-standard comma grouping: "1,200,000" must parse as 1200000,
+     never as 1 — strip commas and spaces before parseFloat */
+  const n = parseFloat(String(v).replace(/[, \u00A0]/g, ""));
+  return Number.isFinite(n) ? n : 0;
 }
 
 function fmtRs(n: number): string {
@@ -108,6 +117,8 @@ let partySeq = 1;
 function newParty(): PartyRow {
   return { id: partySeq++, name: "", share: "100", status: "filer" };
 }
+
+let histSeq = 1;
 
 /* ---------- small UI helpers ---------- */
 
@@ -127,7 +138,7 @@ function Segmented<T extends string>({
           key={o.v}
           type="button"
           onClick={() => onChange(o.v)}
-          className={`rounded-[9px] px-3 py-1.5 text-[12.5px] font-bold transition ${
+          className={`rounded-[9px] px-3.5 py-2 text-[12.5px] font-bold transition ${
             value === o.v
               ? "border border-border bg-card text-foreground shadow-sm"
               : "border border-transparent text-muted-foreground hover:text-foreground"
@@ -284,6 +295,20 @@ export function PunjabRegistryEstimator() {
     setter((rows) => (rows.length > 1 ? rows.filter((r) => r.id !== id) : rows));
   }
 
+  /* split 100% evenly across the party rows — the last row absorbs the
+     rounding remainder so the sum is exactly 100 */
+  function splitEven(side: "b" | "s") {
+    const rows = side === "b" ? buyers : sellers;
+    if (rows.length === 0) return;
+    const each = Math.floor((10000 / rows.length)) / 100;
+    const last = Math.round((100 - each * (rows.length - 1)) * 100) / 100;
+    const next = rows.map((r, i) => ({
+      ...r,
+      share: String(i === rows.length - 1 ? last : each),
+    }));
+    (side === "b" ? setBuyers : setSellers)(next);
+  }
+
   /* ---------- calculate ---------- */
   function handleCalculate() {
     const outcome = calculateRegistry({
@@ -325,13 +350,16 @@ export function PunjabRegistryEstimator() {
     setHistory((h) =>
       [
         {
-          id: Date.now(),
+          id: histSeq++,
           ts: Date.now(),
           res: outcome.result,
           clientName,
           areaName,
           buyers: buyers.map((p) => ({ ...p })),
           sellers: sellers.map((p) => ({ ...p })),
+          btOn,
+          stOn,
+          othRaw: { reg: oReg, fard: oFard, photo: oPhoto, misc: oMisc, stampVendor: oStamp },
         },
         ...h,
       ].slice(0, 20),
@@ -478,6 +506,15 @@ export function PunjabRegistryEstimator() {
     setConstrVal(String(e.res.constrVal || ""));
     setBuyers(e.buyers.map((p) => ({ ...p, id: partySeq++ })));
     setSellers(e.sellers.map((p) => ({ ...p, id: partySeq++ })));
+    /* restore the FBR toggles and other expenses so recalculation gives
+       exactly the saved grand total (older entries default gracefully) */
+    setBtOn(e.btOn ?? true);
+    setStOn(e.stOn ?? true);
+    setOReg(e.othRaw?.reg ?? "");
+    setOFard(e.othRaw?.fard ?? "");
+    setOPhoto(e.othRaw?.photo ?? "");
+    setOMisc(e.othRaw?.misc ?? "");
+    setOStamp(e.othRaw?.stampVendor ?? "");
     setResult(e.res);
     setShowHistory(false);
     toast.success(t("reopened"));
@@ -496,15 +533,29 @@ export function PunjabRegistryEstimator() {
       <div className="flex-1 rounded-xl border border-border bg-muted/30 p-3.5">
         <div className="mb-2.5 flex items-center justify-between gap-2">
           <CardTitle>{label}</CardTitle>
-          <span
-            className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-              sumOk
-                ? "bg-mint/10 text-mint-deep dark:text-mint"
-                : "bg-destructive/10 text-destructive"
-            }`}
-          >
-            {sum.toFixed(1)}%
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                sumOk
+                  ? "bg-mint/10 text-mint-deep dark:text-mint"
+                  : "bg-destructive/10 text-destructive"
+              }`}
+            >
+              {sum.toFixed(1)}%
+            </span>
+            {rows.length > 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-[11.5px]"
+                onClick={() => splitEven(side)}
+                aria-label="Split the shares equally"
+              >
+                Split equally
+              </Button>
+            )}
+          </div>
         </div>
         <div className="flex flex-col gap-2">
           {rows.map((p) => (
@@ -819,9 +870,9 @@ export function PunjabRegistryEstimator() {
 
       {/* results */}
       {result ? (
-        <div ref={resultsRef} className="mt-4 scroll-mt-20 rounded-2xl border border-border bg-card p-4 sm:p-5">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <CardTitle>{t("resultsTitle")}</CardTitle>
+      <div ref={resultsRef} className="mt-4 scroll-mt-20 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-live="polite">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <CardTitle>{t("resultsTitle")}</CardTitle>
             <span className="text-[11px] font-semibold text-muted-foreground">
               {t("ratesEffectiveLabel")} {SR_RATES.ratesEffective}
             </span>

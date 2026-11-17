@@ -30,7 +30,12 @@ export default function DisclaimerPage() {
           Nothing on FreeSeak constitutes professional advice. In particular:
           the Percentage Calculator results are mathematics, not financial
           advice; the Age Calculator output is a calendar computation, not a
-          legal determination. For decisions with consequences, consult a
+          legal determination. The Punjab Registry Estimator&apos;s breakdowns
+          are careful estimates from the rates shown with each result (with
+          their effective date) — they are not a sub-registrar&apos;s or
+          FBR&apos;s determination, actual challans can differ, and final
+          figures must be confirmed with the sub-registrar or PLRA office
+          before any transaction. For decisions with consequences, consult a
           qualified professional.
         </p>
       </PageSection>

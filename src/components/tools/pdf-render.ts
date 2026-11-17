@@ -39,12 +39,21 @@ export class PdfJsPasswordError extends Error {
  * Open raw bytes with pdf.js. IMPORTANT: pdf.js transfers (detaches) the
  * buffer it is handed, so every call gets a fresh copy — the caller's
  * bytes stay valid for pdf-lib work afterwards.
+ *
+ * cMaps + standard-font data ship as local assets (public/pdfjs/) so PDFs
+ * with unembedded standard-14 fonts and CJK text render correctly — the
+ * same rule as everything else here: local files, never a CDN.
  */
 export async function openWithPdfJs(bytes: Uint8Array): Promise<PDFDocumentProxy> {
   const pdfjs = await loadPdfJs();
   const copy = new Uint8Array(bytes); // pdf.js detaches what it receives
   try {
-    return await pdfjs.getDocument({ data: copy }).promise;
+    return await pdfjs.getDocument({
+      data: copy,
+      cMapUrl: "/pdfjs/cmaps/",
+      cMapPacked: true,
+      standardFontDataUrl: "/pdfjs/standard_fonts/",
+    }).promise;
   } catch (err) {
     const name = String((err as { name?: string })?.name ?? "");
     if (name.includes("PasswordException")) throw new PdfJsPasswordError();
@@ -68,9 +77,14 @@ export function destroyPdfJsDoc(doc: PDFDocumentProxy): Promise<void> {
   return maybe ? maybe.call(doc) : Promise.resolve();
 }
 
+/** iOS Safari silently fails (or returns black output) above ~16.7M px */
+const MAX_RENDER_PIXELS = 16_777_216;
+
 /**
  * Render one page at `scale` (1 = 72 DPI, 2 = 144 DPI …). The canvas is
  * freshly created each time — the caller owns it (and its object URL).
+ * A pixel ceiling auto-scales oversized pages (A2+ at 3× would otherwise
+ * blow past the mobile canvas limit and export blank).
  */
 export async function renderPdfPage(
   pdf: PDFDocumentProxy,
@@ -78,7 +92,11 @@ export async function renderPdfPage(
   scale: number,
 ): Promise<RenderedPage> {
   const page = await pdf.getPage(pageNumber);
-  const viewport = page.getViewport({ scale });
+  let viewport = page.getViewport({ scale });
+  const pixels = viewport.width * viewport.height;
+  if (pixels > MAX_RENDER_PIXELS) {
+    viewport = page.getViewport({ scale: scale * Math.sqrt(MAX_RENDER_PIXELS / pixels) });
+  }
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.floor(viewport.width));
   canvas.height = Math.max(1, Math.floor(viewport.height));

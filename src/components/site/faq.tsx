@@ -4,8 +4,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { TOOLS } from "@/lib/tools";
 
-const FAQ = [
+export const HOME_FAQ = [
   {
     q: "Is FreeSeak really free?",
     a: "Yes — completely. No sign-up, no watermarks on your files, no daily limits. FreeSeak stays free to run because every tool processes files in your own browser instead of on our servers, and modest, clearly-placed advertising covers the rest once the site grows.",
@@ -20,7 +21,7 @@ const FAQ = [
   },
   {
     q: "Which tools are coming next?",
-    a: "Twenty-one tools are live today: the full PDF suite (Edit PDF, merge, split, organize, compress, watermark, page numbers, PDF↔images, text extraction, metadata), six image tools (compress, resize, enhance, convert, crop & rotate, favicon), plus the quick utilities — QR codes, word counting, percentages and age. Rather than promise a long roadmap, FreeSeak ships a tool when it is genuinely finished — missing something? Request it, and requests help decide what gets built.",
+    a: `${TOOLS.length} tools are live today: the complete PDF suite (Edit PDF, merge, split, organize, page numbers, watermark, PDF↔images, text extraction, metadata, compress), six image tools (compress, resize, enhance, convert, crop & rotate, favicon), the bilingual Punjab Registry Estimator (English & اردو), plus the quick utilities — QR codes, word counting, percentages and age. Rather than promise a long roadmap, FreeSeak ships a tool when it is genuinely finished — missing something? Request it, and requests help decide what gets built.`,
   },
 ];
 
@@ -32,7 +33,7 @@ export function Faq() {
           Frequently asked questions
         </h2>
         <Accordion type="single" collapsible className="gap-2.5">
-          {FAQ.map((f, i) => (
+          {HOME_FAQ.map((f, i) => (
             <AccordionItem
               key={f.q}
               value={`q-${i}`}

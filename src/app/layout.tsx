@@ -51,6 +51,7 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "FreeSeak — Free Private Online Tools, No Uploads",
     description:
@@ -77,7 +78,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#F3F6FA",
+  /* media-scoped so the phone/browser chrome follows the dark theme too */
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F3F6FA" },
+    { media: "(prefers-color-scheme: dark)", color: "#0E1626" },
+  ],
 };
 
 export default function RootLayout({

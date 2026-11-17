@@ -23,6 +23,24 @@ const PLACEHOLDERS = [
 /* request types that actually move bytes to a server */
 const DATA_TYPES = ["fetch", "xmlhttprequest", "beacon"];
 
+/* hosts excluded from the zero-request counter: analytics/ads beacons we
+   may enable later count as page plumbing, not as visitor data leaving —
+   without this exclusion the counter would break the day they go live */
+const EXEMPT_HOST_SUFFIXES = [
+  "cloudflareinsights.com",
+  "google-analytics.com",
+  "analytics.google.com",
+  "doubleclick.net",
+  "googlesyndication.com",
+];
+
+function isForeignRequest(url: URL): boolean {
+  if (url.origin === location.origin) return false;
+  return !EXEMPT_HOST_SUFFIXES.some(
+    (suffix) => url.hostname === suffix || url.hostname.endsWith("." + suffix),
+  );
+}
+
 export function WorkbenchHero({
   query,
   onQuery,
@@ -76,8 +94,7 @@ export function WorkbenchHero({
         performance.getEntriesByType("resource") as PerformanceResourceTiming[]
       ).filter(
         (r) =>
-          DATA_TYPES.includes(r.initiatorType) &&
-          new URL(r.name, location.origin).origin !== location.origin,
+          DATA_TYPES.includes(r.initiatorType) && isForeignRequest(new URL(r.name, location.origin)),
       ).length;
     const base = count();
     const t = setInterval(() => setNet(Math.max(0, count() - base)), 500);

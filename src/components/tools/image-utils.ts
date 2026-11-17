@@ -21,7 +21,7 @@ export const FORMAT_OPTIONS: { value: FormatChoice; label: string }[] = [
 ];
 
 /** iOS Safari refuses canvases above ~16.7M pixels — stay safely under. */
-const MAX_CANVAS_PIXELS = 16_777_216;
+export const MAX_CANVAS_PIXELS = 16_777_216;
 
 export interface LoadedImage {
   img: HTMLImageElement;
@@ -52,6 +52,65 @@ export function resolveMime(originalType: string, choice: FormatChoice): OutputM
   if (originalType === "image/png") return "image/png";
   if (originalType === "image/webp") return "image/webp";
   return "image/jpeg"; // jpg, gif, bmp, avif, …
+}
+
+/**
+ * EXIF orientation (1–8) of a JPEG byte stream, from the TIFF IFD0 tag.
+ * Phone photos carry 3–8 when the sensor was rotated; browsers honour it
+ * when drawing to a canvas, but raw byte embedding (PDF) does not.
+ * Returns 1 when no orientation tag is present (or the parse fails).
+ */
+export function readJpegOrientation(bytes: Uint8Array): number {
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return 1;
+  const len = Math.min(bytes.length, 128 * 1024); // EXIF lives in the first APP1
+  let off = 2;
+  while (off + 4 <= len) {
+    if (bytes[off] !== 0xff) {
+      off += 1;
+      continue;
+    }
+    const marker = bytes[off + 1];
+    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+      off += 2; // standalone markers carry no length
+      continue;
+    }
+    if (marker === 0xda || marker === 0xd9) break; // scan data reached — no EXIF
+    const segLen = (bytes[off + 2] << 8) | bytes[off + 3];
+    const isExif =
+      marker === 0xe1 &&
+      off + 10 <= len &&
+      bytes[off + 4] === 0x45 && // "E"
+      bytes[off + 5] === 0x78 && // "x"
+      bytes[off + 6] === 0x69 && // "i"
+      bytes[off + 7] === 0x66 && // "f"
+      bytes[off + 8] === 0x00 &&
+      bytes[off + 9] === 0x00;
+    if (isExif) {
+      const t = off + 10; // TIFF header
+      if (t + 8 > len) return 1;
+      const little = bytes[t] === 0x49 && bytes[t + 1] === 0x49;
+      const read16 = (p: number) =>
+        little ? bytes[p] | (bytes[p + 1] << 8) : (bytes[p] << 8) | bytes[p + 1];
+      const read32 = (p: number) =>
+        little
+          ? (bytes[p] | (bytes[p + 1] << 8) | (bytes[p + 2] << 16) | (bytes[p + 3] << 24)) >>> 0
+          : ((bytes[p] << 24) | (bytes[p + 1] << 16) | (bytes[p + 2] << 8) | bytes[p + 3]) >>> 0;
+      const ifd = t + read32(t + 4);
+      if (ifd + 2 > len) return 1;
+      const count = read16(ifd);
+      for (let i = 0; i < count; i++) {
+        const e = ifd + 2 + i * 12;
+        if (e + 12 > len) break;
+        if (read16(e) === 0x0112) {
+          const val = read16(e + 8);
+          return val >= 1 && val <= 8 ? val : 1;
+        }
+      }
+      return 1;
+    }
+    off += 2 + segLen;
+  }
+  return 1;
 }
 
 export type FitMode = "stretch" | "contain" | "cover";
