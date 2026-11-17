@@ -41,6 +41,10 @@ export interface ToolDef {
   short: string;
   /** v0.9.1: one-line pitch for the homepage index rows (falls back to short) */
   tagline?: string;
+  /** v0.10.1: suppress the one-liner under the tool-page header (meta
+   *  description and search still use `short`) — for tools whose header
+   *  reads cleaner with the name alone */
+  hideHeaderShort?: boolean;
   category: CategoryId;
   /** lucide icon key, see components/site/tool-icon.tsx */
   icon: string;
@@ -772,6 +776,7 @@ export const TOOLS: ToolDef[] = [
     short:
       "Punjab property registry fee calculator — estimate stamp duty, PLRA, mutation and FBR taxes (236K/236C) before you register. Free, private, English & اردو.",
     tagline: "Registry costs before you reach the sub-registrar.",
+    hideHeaderShort: true,
     category: "calc",
     icon: "landmark",
     keywords:

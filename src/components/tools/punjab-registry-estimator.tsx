@@ -58,11 +58,13 @@ import {
 } from "@/lib/punjab-registry-engine";
 import {
   buildExportHTML,
+  buildJPGBlob,
+  buildPDFBlob,
   buildRows,
   buildSummaryText,
   EMPTY_PROFILE,
-  loadVendorScript,
   type SrProfile,
+  type SrPaper,
 } from "@/lib/sr-export";
 import { downloadBlob } from "./image-utils";
 
@@ -79,18 +81,20 @@ interface HistEntry {
   id: number;
   ts: number;
   res: SrRegistryResult;
+  clientName: string;
+  areaName: string;
   buyers: PartyRow[];
   sellers: PartyRow[];
 }
 
 interface Persisted {
   lang: SrLang;
+  paper?: SrPaper;
   profile: SrProfile;
   history: HistEntry[];
 }
 
 const STORAGE_KEY = "freeseak.registry.v1";
-const URDU_FONT = '"Jameel Noori Nastaleeq", var(--font-inter), sans-serif';
 
 function pf(v: string): number {
   return parseFloat(v) || 0;
@@ -164,6 +168,8 @@ function CardTitle({ children }: { children: React.ReactNode }) {
 
 export function PunjabRegistryEstimator() {
   const [lang, setLang] = useState<SrLang>("en");
+  /* paper size for exports (v0.10.1): a4 default | a5 = ½ A4 148×210 | qf = ¼ foolscap 108×165 */
+  const [paper, setPaper] = useState<SrPaper>("a4");
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<SrProfile>(EMPTY_PROFILE);
 
@@ -171,6 +177,8 @@ export function PunjabRegistryEstimator() {
   const [deed, setDeed] = useState<"conveyance" | "gift">("conveyance");
   const [propType, setPropType] = useState<"c" | "nc">("c");
   const [legalHeir, setLegalHeir] = useState<"yes" | "no">("no");
+  const [clientName, setClientName] = useState("");
+  const [areaName, setAreaName] = useState("");
   const [landVal, setLandVal] = useState("");
   const [constrVal, setConstrVal] = useState("");
 
@@ -227,6 +235,7 @@ export function PunjabRegistryEstimator() {
         if (raw) {
           const p = JSON.parse(raw) as Persisted;
           if (p.lang === "ur" || p.lang === "en") setLang(p.lang);
+          if (p.paper === "a5" || p.paper === "qf") setPaper(p.paper);
           if (p.profile) setProfile({ ...EMPTY_PROFILE, ...p.profile });
           if (Array.isArray(p.history)) setHistory(p.history.slice(0, 20));
         }
@@ -242,12 +251,12 @@ export function PunjabRegistryEstimator() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      const p: Persisted = { lang, profile, history };
+      const p: Persisted = { lang, paper, profile, history };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
     } catch {
       /* ignore */
     }
-  }, [hydrated, lang, profile, history]);
+  }, [hydrated, lang, paper, profile, history]);
 
   /* ---------- derived ---------- */
   const buyerSum = buyers.reduce((a, p) => a + pf(p.share), 0);
@@ -310,12 +319,17 @@ export function PunjabRegistryEstimator() {
     }
 
     setResult(outcome.result);
+    /* warm the PDF engine in the background (pdf-lib is already in the
+       bundle for the site's other PDF tools) so the first export is quick */
+    void import("pdf-lib").catch(() => {});
     setHistory((h) =>
       [
         {
           id: Date.now(),
           ts: Date.now(),
           res: outcome.result,
+          clientName,
+          areaName,
           buyers: buyers.map((p) => ({ ...p })),
           sellers: sellers.map((p) => ({ ...p })),
         },
@@ -332,6 +346,8 @@ export function PunjabRegistryEstimator() {
     setDeed("conveyance");
     setPropType("c");
     setLegalHeir("no");
+    setClientName("");
+    setAreaName("");
     setLandVal("");
     setConstrVal("");
     setBuyers([newParty()]);
@@ -347,72 +363,29 @@ export function PunjabRegistryEstimator() {
     toast.success(t("resetDone"));
   }
 
-  /* ---------- exports ---------- */
-
-  async function ensureCaptureStack() {
-    await loadVendorScript("/vendor/html2canvas.min.js");
-    await loadVendorScript("/vendor/jspdf.umd.min.js");
-  }
-
-  async function captureSheet(): Promise<HTMLCanvasElement> {
-    if (!result) throw new Error("no result");
-    const holder = document.createElement("div");
-    holder.style.cssText =
-      "position:fixed;left:-99999px;top:0;background:#ffffff;z-index:-1;";
-    holder.innerHTML = buildExportHTML(result, lang, profile);
-    document.body.appendChild(holder);
-    try {
-      if (ur) {
-        try {
-          await document.fonts.load('16px "Jameel Noori Nastaleeq"');
-        } catch {
-          /* fallback font in exports is acceptable */
-        }
-      }
-      const h2c = (window as unknown as {
-        html2canvas?: (_el: HTMLElement, _o: Record<string, unknown>) => Promise<HTMLCanvasElement>;
-      }).html2canvas;
-      if (!h2c || !holder.firstElementChild) throw new Error("capture stack unavailable");
-      return await h2c(holder.firstElementChild as HTMLElement, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-      });
-    } finally {
-      holder.remove();
-    }
-  }
+  /* ---------- exports (v0.10.1: canvas + pdf-lib — see lib/sr-export.ts) ---------- */
 
   async function exportPDF() {
     if (!result || busy) return;
     setBusy(true);
     try {
-      await ensureCaptureStack();
-      const canvas = await captureSheet();
-      const jspdfNS = (window as unknown as {
-        jspdf?: { jsPDF: new (_o: Record<string, unknown>) => jsPDFInstance };
-      }).jspdf;
-      if (!jspdfNS) throw new Error("jsPDF unavailable");
-      const pdf = new jspdfNS.jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
-      const pw = pdf.internal.pageSize.getWidth();
-      const ph = pdf.internal.pageSize.getHeight();
-      const margin = 24;
-      const maxW = pw - margin * 2;
-      const maxH = ph - margin * 2;
-      let w = maxW;
-      let h = (canvas.height * w) / canvas.width;
-      if (h > maxH) {
-        h = maxH;
-        w = (canvas.width * h) / canvas.height;
-      }
-      pdf.addImage(canvas.toDataURL("image/jpeg", 0.94), "JPEG", (pw - w) / 2, margin, w, h);
-      pdf.setProperties({
-        title: "Punjab Registry Estimate",
-        creator: "FreeSeak (freeseak.com)",
-      });
-      downloadBlob(pdf.output("blob") as Blob, "punjab-registry-estimate.pdf");
+      const blob = await buildPDFBlob(result, lang, profile, clientName, areaName, paper);
+      downloadBlob(
+        blob,
+        paper === "a4"
+          ? "punjab-registry-estimate.pdf"
+          : paper === "a5"
+            ? "punjab-registry-estimate-a5.pdf"
+            : "punjab-registry-slip.pdf",
+      );
       toast.success(lang === "ur" ? "پی ڈی ایف تیار ہے" : "PDF downloaded");
-    } catch {
-      toast.error("PDF export failed — please try again.");
+    } catch (err) {
+      console.error("registry PDF export failed:", err);
+      toast.error(
+        lang === "ur"
+          ? "پی ڈی ایف نہیں بن سکی — دوبارہ کوشش کریں"
+          : "PDF export failed — please try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -422,15 +395,18 @@ export function PunjabRegistryEstimator() {
     if (!result || busy) return;
     setBusy(true);
     try {
-      await ensureCaptureStack();
-      const canvas = await captureSheet();
-      const blob: Blob | null = await new Promise((res) =>
-        canvas.toBlob((b) => res(b), "image/jpeg", 0.92),
+      const blob = await buildJPGBlob(result, lang, profile, clientName, areaName, paper);
+      downloadBlob(
+        blob,
+        paper === "a4"
+          ? "punjab-registry-estimate.jpg"
+          : paper === "a5"
+            ? "punjab-registry-estimate-a5.jpg"
+            : "punjab-registry-slip.jpg",
       );
-      if (!blob) throw new Error("encode failed");
-      downloadBlob(blob, "punjab-registry-estimate.jpg");
       toast.success(lang === "ur" ? "تصویر تیار ہے" : "Image downloaded");
-    } catch {
+    } catch (err) {
+      console.error("registry image export failed:", err);
       toast.error("Image export failed — please try again.");
     } finally {
       setBusy(false);
@@ -448,8 +424,13 @@ export function PunjabRegistryEstimator() {
     doc.write(
       `<!doctype html><html><head><meta charset="utf-8"><style>` +
         `@font-face{font-family:'Jameel Noori Nastaleeq';src:url('${location.origin}/fonts/JameelNooriNastaleeq.woff2') format('woff2');font-display:block;}` +
-        `@page{margin:10mm;}html,body{margin:0;padding:0;background:#fff;}` +
-        `</style></head><body>${buildExportHTML(result, lang, profile)}</body></html>`,
+        (paper === "a5"
+          ? `@page{size:148mm 210mm;margin:8mm;}tr{page-break-inside:avoid;}`
+          : paper === "qf"
+            ? `@page{size:108mm 165mm;margin:8mm;}`
+            : `@page{margin:10mm;}`) +
+        `html,body{margin:0;padding:0;background:#fff;}` +
+        `</style></head><body>${buildExportHTML(result, lang, profile, clientName, areaName, paper)}</body></html>`,
     );
     doc.close();
     const go = async () => {
@@ -469,7 +450,7 @@ export function PunjabRegistryEstimator() {
   async function copySummary() {
     if (!result) return;
     try {
-      await navigator.clipboard.writeText(buildSummaryText(result, lang, profile));
+      await navigator.clipboard.writeText(buildSummaryText(result, lang, profile, clientName, areaName));
       toast.success(ur ? "نقل ہو گیا" : "Copied to clipboard");
     } catch {
       toast.error("Copy failed.");
@@ -479,7 +460,7 @@ export function PunjabRegistryEstimator() {
   function shareWhatsApp() {
     if (!result) return;
     window.open(
-      "https://wa.me/?text=" + encodeURIComponent(buildSummaryText(result, lang, profile)),
+      "https://wa.me/?text=" + encodeURIComponent(buildSummaryText(result, lang, profile, clientName, areaName)),
       "_blank",
       "noopener",
     );
@@ -491,6 +472,8 @@ export function PunjabRegistryEstimator() {
     setDeed(e.res.deed);
     setPropType(e.res.pt);
     setLegalHeir(e.res.lh);
+    setClientName(e.clientName ?? "");
+    setAreaName(e.areaName ?? "");
     setLandVal(String(e.res.landVal || ""));
     setConstrVal(String(e.res.constrVal || ""));
     setBuyers(e.buyers.map((p) => ({ ...p, id: partySeq++ })));
@@ -592,11 +575,10 @@ export function PunjabRegistryEstimator() {
   return (
     <div
       dir={ur ? "rtl" : "ltr"}
-      style={ur ? { fontFamily: URDU_FONT } : undefined}
-      className={ur ? "text-[15px] leading-[2]" : undefined}
+      className={ur ? "sr-urdu sr-font leading-[2.1]" : undefined}
     >
       {/* top bar: language · rates effective · profile · history */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <div dir="ltr" className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <Segmented
             value={lang}
@@ -644,6 +626,24 @@ export function PunjabRegistryEstimator() {
       <div className="rounded-2xl border border-border bg-card p-4">
         <CardTitle>{t("propDeedTitle")}</CardTitle>
         <div className="mt-3 grid gap-3.5 sm:grid-cols-2">
+          <Field label={t("clientName")}>
+            <Input
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              aria-label={t("clientName")}
+              className="text-[13px]"
+            />
+          </Field>
+          <Field label={t("areaName")}>
+            <Input
+              value={areaName}
+              onChange={(e) => setAreaName(e.target.value)}
+              aria-label={t("areaName")}
+              className="text-[13px]"
+            />
+          </Field>
+        </div>
+        <div className="mt-3.5 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
           <Field label={t("locationType")}>
             <Segmented
               value={loc}
@@ -931,8 +931,25 @@ export function PunjabRegistryEstimator() {
             </div>
           ) : null}
 
+          {/* paper size (v0.10.1): drives the PDF · JPG · print sheet */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-border bg-muted/40 px-3 py-2">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              {t("paperLabel")}
+            </span>
+            <Segmented
+              value={paper}
+              onChange={(v) => setPaper(v)}
+              options={[
+                { v: "a4" as SrPaper, label: t("paperA4") },
+                { v: "a5" as SrPaper, label: t("paperA5") },
+                { v: "qf" as SrPaper, label: t("paperQF") },
+              ]}
+            />
+            <span className="text-[11px] text-muted-foreground">{t("paperHint")}</span>
+          </div>
+
           {/* export actions */}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
             <Button type="button" size="sm" className="h-9 text-[12.5px]" onClick={exportPDF} disabled={busy}>
               <FileDown className="size-4" /> {t("downloadPDF")}
             </Button>
@@ -955,7 +972,10 @@ export function PunjabRegistryEstimator() {
 
       {/* ---------- area calculator modal ---------- */}
       <Dialog open={showArea} onOpenChange={setShowArea}>
-        <DialogContent className="max-w-md">
+        <DialogContent
+          dir={ur ? "rtl" : "ltr"}
+          className={ur ? "max-w-md sr-urdu sr-font" : "max-w-md"}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display">
               <Ruler className="size-4 text-primary" /> {t("areaCalcTitle")}
@@ -1040,7 +1060,10 @@ export function PunjabRegistryEstimator() {
 
       {/* ---------- construction calculator modal ---------- */}
       <Dialog open={showConstr} onOpenChange={setShowConstr}>
-        <DialogContent className="max-w-md">
+        <DialogContent
+          dir={ur ? "rtl" : "ltr"}
+          className={ur ? "max-w-md sr-urdu sr-font" : "max-w-md"}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display">
               <Calculator className="size-4 text-primary" /> {t("constrCalcTitle")}
@@ -1078,7 +1101,10 @@ export function PunjabRegistryEstimator() {
 
       {/* ---------- profile modal ---------- */}
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
-        <DialogContent className="max-w-md">
+        <DialogContent
+          dir={ur ? "rtl" : "ltr"}
+          className={ur ? "max-w-md sr-urdu sr-font" : "max-w-md"}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display">
               <UserRound className="size-4 text-primary" /> {t("myProfile")}
@@ -1115,7 +1141,10 @@ export function PunjabRegistryEstimator() {
 
       {/* ---------- history modal ---------- */}
       <Dialog open={showHistory} onOpenChange={setShowHistory}>
-        <DialogContent className="max-w-lg">
+        <DialogContent
+          dir={ur ? "rtl" : "ltr"}
+          className={ur ? "max-w-lg sr-urdu sr-font" : "max-w-lg"}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display">
               <HistoryIcon className="size-4 text-primary" /> {t("historyTitle")}
@@ -1133,7 +1162,7 @@ export function PunjabRegistryEstimator() {
                   >
                     <div className="min-w-0">
                       <p className="text-[12.5px] font-bold text-foreground">
-                        {fmtRs(e.res.grand)}
+                        {e.clientName ? `${e.clientName} · ` : ""}{fmtRs(e.res.grand)}
                         <span className="ml-2 font-medium text-muted-foreground">
                           {e.res.urban ? t("urban") : t("rural")} ·{" "}
                           {e.res.isGift ? t("gift") : t("conveyance")}
@@ -1193,10 +1222,3 @@ export function PunjabRegistryEstimator() {
   );
 }
 
-/* jsPDF instance typing (loaded lazily from /vendor) */
-interface jsPDFInstance {
-  internal: { pageSize: { getWidth(): number; getHeight(): number } };
-  addImage(_data: string, _format: string, _x: number, _y: number, _w: number, _h: number): void;
-  setProperties(_p: { title?: string; creator?: string }): void;
-  output(_type: "blob"): Blob;
-}

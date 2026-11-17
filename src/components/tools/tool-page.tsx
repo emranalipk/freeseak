@@ -146,7 +146,9 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
           </h1>
           {/* v0.9.3: the header keeps only the one-liner — the full
               SEO intro moved below the tool, where reading belongs */}
-          {tool.short && (
+          {/* v0.10.1: tools can opt out of the header one-liner
+              (hideHeaderShort) — the meta description still uses it */}
+          {tool.short && !tool.hideHeaderShort && (
             <p className="mt-2 max-w-[560px] text-[13.5px] leading-relaxed text-muted-foreground">
               {tool.short}
             </p>
