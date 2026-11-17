@@ -1,9 +1,10 @@
 {
   "name": "freeseak",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/check-pdfjs-version.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."
@@ -13,12 +14,8 @@
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-radio-group": "^1.5.1",
     "@radix-ui/react-select": "^2.2.5",
-    "@radix-ui/react-slider": "^1.6.1",
     "@radix-ui/react-slot": "^1.2.3",
-    "@radix-ui/react-switch": "^1.4.1",
-    "@radix-ui/react-tooltip": "^1.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -27,7 +24,7 @@
     "next": "^16.1.1",
     "next-themes": "^0.4.6",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^6.5.438",
+    "pdfjs-dist": "6.5.438",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

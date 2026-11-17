@@ -3,11 +3,11 @@
 Free online tools that run entirely in your browser. No sign-up, no uploads —
 your files never leave your device.
 
-**21 tools live:** PDF suite (Edit PDF · Merge · Split · Images to PDF ·
+**22 tools live:** PDF suite (Edit PDF · Merge · Split · Images to PDF ·
 PDF to Images · Organize Pages · Page Numbers · Watermark · Extract Text ·
 Metadata · Compress) · Image tools (Compress · Resize · Enhance · Convert ·
-Crop & Rotate · Favicon) · QR Code Generator · Word Counter · Percentage
-Calculator · Age Calculator
+Crop & Rotate · Favicon) · Punjab Registry Estimator (English & اردو) ·
+QR Code Generator · Word Counter · Percentage Calculator · Age Calculator
 
 Built with Next.js (static export), Tailwind CSS and shadcn/ui, deployed on
 Cloudflare Workers. See [CHANGELOG.md](CHANGELOG.md) for what shipped and

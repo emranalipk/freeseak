@@ -67,11 +67,6 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     // v0.6 (editor lineage): vendored Tesseract.js OCR assets
     // (worker + WASM cores) — minified vendor files served statically.
     "public/ocr/**",
-    // v0.10.1: the v0.10.0 html2canvas/jsPDF vendored files were removed
-    // with the canvas+pdf-lib export rewrite — kept so a not-yet-deleted
-    // public/vendor/ folder on GitHub cannot fail the lint. Remove this
-    // entry together with the folder.
-    "public/vendor/**",
   ]
 }];
 
