@@ -1,0 +1,27 @@
+{
+  "name": "FreeSeak — free private online tools",
+  "short_name": "FreeSeak",
+  "description": "Free, privacy-first tools that run entirely in your browser. No files uploaded, no account needed.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#F3F6FA",
+  "theme_color": "#F3F6FA",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
