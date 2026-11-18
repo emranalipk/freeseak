@@ -62,6 +62,7 @@ import {
   buildPDFBlob,
   buildRows,
   buildSummaryText,
+  SR_PAPER_MM,
   EMPTY_PROFILE,
   type SrProfile,
   type SrPaper,
@@ -171,7 +172,7 @@ function Field({
 
 function CardTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-display text-[13.5px] font-bold text-foreground">{children}</p>
+    <p data-sr-title className="font-display text-[13.5px] font-bold text-foreground">{children}</p>
   );
 }
 
@@ -404,7 +405,7 @@ export function PunjabRegistryEstimator() {
           ? "punjab-registry-estimate.pdf"
           : paper === "a5"
             ? "punjab-registry-estimate-a5.pdf"
-            : "punjab-registry-slip.pdf",
+            : "punjab-registry-estimate-qf.pdf",
       );
       toast.success(lang === "ur" ? "پی ڈی ایف تیار ہے" : "PDF downloaded");
     } catch (err) {
@@ -430,7 +431,7 @@ export function PunjabRegistryEstimator() {
           ? "punjab-registry-estimate.jpg"
           : paper === "a5"
             ? "punjab-registry-estimate-a5.jpg"
-            : "punjab-registry-slip.jpg",
+            : "punjab-registry-estimate-qf.jpg",
       );
       toast.success(lang === "ur" ? "تصویر تیار ہے" : "Image downloaded");
     } catch (err) {
@@ -452,11 +453,9 @@ export function PunjabRegistryEstimator() {
     doc.write(
       `<!doctype html><html><head><meta charset="utf-8"><style>` +
         `@font-face{font-family:'Jameel Noori Nastaleeq';src:url('${location.origin}/fonts/JameelNooriNastaleeq.woff2') format('woff2');font-display:block;}` +
-        (paper === "a5"
-          ? `@page{size:148mm 210mm;margin:8mm;}tr{page-break-inside:avoid;}`
-          : paper === "qf"
-            ? `@page{size:108mm 165mm;margin:8mm;}`
-            : `@page{margin:10mm;}`) +
+        /* v1.0.1: every size declares its paper and the exact 0.25 in margin;
+           rows never split across pages on any size */
+        `@page{size:${SR_PAPER_MM[paper]};margin:6.35mm;}tr{page-break-inside:avoid;}` +
         `html,body{margin:0;padding:0;background:#fff;}` +
         `</style></head><body>${buildExportHTML(result, lang, profile, clientName, areaName, paper)}</body></html>`,
     );
@@ -909,7 +908,7 @@ export function PunjabRegistryEstimator() {
             ] as const
           ).map((g) => (
             <div key={g.key} className="mt-3">
-              <p className="border-b border-border pb-1.5 text-[12px] font-extrabold text-navy dark:text-mint">
+              <p data-sr-title className="border-b border-border pb-1.5 text-[12px] font-extrabold text-navy dark:text-mint">
                 {g.title}
               </p>
               {rows
@@ -921,7 +920,7 @@ export function PunjabRegistryEstimator() {
                       r.strong ? "border-b border-dashed border-border" : ""
                     }`}
                   >
-                    <span className={`text-[12.5px] ${r.strong ? "font-bold text-foreground" : "text-muted-foreground"}`}>
+                    <span className={`text-[12.5px] ${r.strong ? (ur ? "font-normal text-foreground" : "font-bold text-foreground") : "text-muted-foreground"}`}>
                       {r.lbl}
                     </span>
                     <span className={`whitespace-nowrap text-[12.5px] font-bold ${r.strong ? "text-foreground" : "text-foreground/90"}`}>
@@ -953,13 +952,13 @@ export function PunjabRegistryEstimator() {
 
           {/* grand total */}
           <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-navy px-4 py-3 dark:bg-[#22477F]">
-            <span className="text-[13.5px] font-extrabold text-white">
+            <span className={`text-[13.5px] ${ur ? "font-normal" : "font-extrabold"} text-white`}>
               {result.allOff ? t("grandTotalExclFBR") : t("grandTotal")}
             </span>
             <span className="text-[17px] font-extrabold text-white">{fmtRs(result.grand)}</span>
           </div>
           {result.fbrTot > 0 && !result.allOff ? (
-            <p className="mt-2 text-[12px] font-bold text-muted-foreground">
+            <p className={`mt-2 text-[12px] ${ur ? "font-normal" : "font-bold"} text-muted-foreground`}>
               {t("grandTotalExclFBR")}: {fmtRs(result.grand - result.fbrTot)}
             </p>
           ) : null}
@@ -967,7 +966,7 @@ export function PunjabRegistryEstimator() {
           {/* filer saving */}
           {result.filerSaving > 0 ? (
             <div className="mt-3 rounded-xl border border-mint/45 bg-mint/5 p-3">
-              <p className="text-[12.5px] font-extrabold text-mint-deep dark:text-mint">
+              <p className={`text-[12.5px] ${ur ? "font-normal" : "font-extrabold"} text-mint-deep dark:text-mint`}>
                 {t("filerSavingTitle")}: {fmtRs(result.filerSaving)}
               </p>
               {result.buyerSaving > 0 && result.sellerSaving > 0 ? (
@@ -1028,7 +1027,7 @@ export function PunjabRegistryEstimator() {
           className={ur ? "max-w-md sr-urdu sr-font" : "max-w-md"}
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-display">
+            <DialogTitle data-sr-title className="flex items-center gap-2 font-display">
               <Ruler className="size-4 text-primary" /> {t("areaCalcTitle")}
             </DialogTitle>
           </DialogHeader>
@@ -1116,7 +1115,7 @@ export function PunjabRegistryEstimator() {
           className={ur ? "max-w-md sr-urdu sr-font" : "max-w-md"}
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-display">
+            <DialogTitle data-sr-title className="flex items-center gap-2 font-display">
               <Calculator className="size-4 text-primary" /> {t("constrCalcTitle")}
             </DialogTitle>
           </DialogHeader>
@@ -1157,7 +1156,7 @@ export function PunjabRegistryEstimator() {
           className={ur ? "max-w-md sr-urdu sr-font" : "max-w-md"}
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-display">
+            <DialogTitle data-sr-title className="flex items-center gap-2 font-display">
               <UserRound className="size-4 text-primary" /> {t("myProfile")}
             </DialogTitle>
           </DialogHeader>
@@ -1197,7 +1196,7 @@ export function PunjabRegistryEstimator() {
           className={ur ? "max-w-lg sr-urdu sr-font" : "max-w-lg"}
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-display">
+            <DialogTitle data-sr-title className="flex items-center gap-2 font-display">
               <HistoryIcon className="size-4 text-primary" /> {t("historyTitle")}
             </DialogTitle>
           </DialogHeader>

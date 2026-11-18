@@ -88,6 +88,21 @@
 .sr-urdu .text-\[15px\] { font-size: 17px; }
 .sr-urdu .text-\[17px\] { font-size: 19px; }
 
+/* v1.0.1 — Urdu headings. The display face (Plus Jakarta Sans) has no Urdu
+   glyphs, so CardTitle/DialogTitle/group headers fell back to a system
+   Naskh font in Urdu mode — the "wrong font" headings. And since the
+   shipped Jameel Noori Nastaleeq has only weight 400, a bold request
+   synthesized a smear that reads as a different font. Urdu-mode headings
+   now inherit the Jameel face at regular weight, with Nastaliq's line
+   height and no letter-spacing (which breaks joined script). English
+   mode is untouched. */
+.sr-urdu [data-sr-title] {
+  font-family: inherit;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 2;
+}
+
 /* FreeSeak — Discovery Blue (light) */
 :root {
   --radius: 0.75rem;
