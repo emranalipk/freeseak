@@ -27,6 +27,7 @@ import {
   downloadBlob,
   extForMime,
   formatBytes,
+  imageErrorMessage,
   loadImageFile,
   resolveMime,
   FORMAT_OPTIONS,
@@ -68,6 +69,29 @@ const MAX_OUTPUT_PIXELS = 16_777_216;
 const MIN_CROP = 16;
 const PREVIEW_MAX_EDGE = 1100;
 
+/**
+ * Largest centred, axis-aligned rectangle that stays fully inside a bw×bh
+ * rectangle tilted by thetaDeg (|θ| ≤ 15° here). This is what makes the
+ * straighten slider honest: the working area is pre-cropped to the tilted
+ * image, so there are no empty corners to export by accident.
+ * Three regimes: very wide images (height binds), very tall ones (width
+ * binds), everything in between (both constraints bind).
+ */
+function inscribedRect(bw: number, bh: number, thetaDeg: number) {
+  const a = (thetaDeg * Math.PI) / 180;
+  const s = Math.abs(Math.sin(a));
+  const c = Math.cos(a);
+  if (s === 0) return { w: bw, h: bh };
+  if (2 * s * c >= bh / bw) {
+    return { w: bh / (2 * s), h: bh / (2 * c) };
+  }
+  if (2 * s * c >= bw / bh) {
+    return { w: bw / (2 * c), h: bw / (2 * s) };
+  }
+  const denom = c * c - s * s;
+  return { w: (bw * c - bh * s) / denom, h: (bh * c - bw * s) / denom };
+}
+
 interface LoadedImageState {
   file: File;
   img: HTMLImageElement;
@@ -83,6 +107,7 @@ export function ImageCropper() {
   const [rotation, setRotation] = useState<Rotation>(0);
   const [flipH, setFlipH] = useState(false);
   const [flipV, setFlipV] = useState(false);
+  const [straighten, setStraighten] = useState(0);
   const [aspect, setAspect] = useState<number | null>(null);
   const [crop, setCrop] = useState<CropRect | null>(null);
   const [format, setFormat] = useState<FormatChoice>("keep");
@@ -100,15 +125,19 @@ export function ImageCropper() {
     orig: CropRect;
   } | null>(null);
 
-  /* rotated natural dimensions */
-  const rw = loaded ? (rotation === 90 || rotation === 270 ? loaded.height : loaded.width) : 0;
-  const rh = loaded ? (rotation === 90 || rotation === 270 ? loaded.width : loaded.height) : 0;
+  /* the straightened working area — dims of the tilted image's inscribed
+     rectangle; the crop box lives entirely inside real image pixels */
+  const baseW = loaded ? (rotation === 90 || rotation === 270 ? loaded.height : loaded.width) : 0;
+  const baseH = loaded ? (rotation === 90 || rotation === 270 ? loaded.width : loaded.height) : 0;
+  const insc = baseW > 0 ? inscribedRect(baseW, baseH, straighten) : { w: 0, h: 0 };
+  const rw = Math.floor(insc.w);
+  const rh = Math.floor(insc.h);
 
   const addFile = useCallback(async (files: File[]) => {
     const file = files.find((f) => f.type.startsWith("image/"));
     if (!file) {
       toast.error("That file isn't an image", {
-        description: "JPG, PNG, WebP, GIF and BMP images are supported.",
+        description: "JPG, PNG, WebP, GIF, BMP and iPhone HEIC photos are supported.",
       });
       return;
     }
@@ -118,11 +147,12 @@ export function ImageCropper() {
       setRotation(0);
       setFlipH(false);
       setFlipV(false);
+      setStraighten(0);
       setAspect(null);
       setCrop({ x: 0, y: 0, w: res.width, h: res.height });
-    } catch {
+    } catch (err) {
       toast.error(`Couldn't read “${file.name}”`, {
-        description: "The file may be corrupted or in an unsupported format.",
+        description: imageErrorMessage(err),
       });
     }
   }, []);
@@ -139,14 +169,18 @@ export function ImageCropper() {
     if (!ctx) return;
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.rotate(((rotation + straighten) * Math.PI) / 180);
     ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-    const dw = rotation === 90 || rotation === 270 ? canvas.height : canvas.width;
-    const dh = rotation === 90 || rotation === 270 ? canvas.width : canvas.height;
-    ctx.drawImage(loaded.img, -dw / 2, -dh / 2, dw, dh);
+    ctx.drawImage(
+      loaded.img,
+      (-loaded.width * scale) / 2,
+      (-loaded.height * scale) / 2,
+      loaded.width * scale,
+      loaded.height * scale,
+    );
     ctx.restore();
     setPreviewDims({ w: canvas.width, h: canvas.height });
-  }, [loaded, rotation, flipH, flipV, rw, rh]);
+  }, [loaded, rotation, straighten, flipH, flipV, rw, rh]);
 
   const previewScale = previewDims && rw > 0 ? previewDims.w / rw : 1;
 
@@ -179,12 +213,32 @@ export function ImageCropper() {
       if (!loaded) return;
       const nr = (((rotation + delta) % 360 + 360) % 360) as Rotation;
       setRotation(nr);
-      const nrw = nr === 90 || nr === 270 ? loaded.height : loaded.width;
-      const nrh = nr === 90 || nr === 270 ? loaded.width : loaded.height;
-      setCrop({ x: 0, y: 0, w: nrw, h: nrh });
+      const nBaseW = nr === 90 || nr === 270 ? loaded.height : loaded.width;
+      const nBaseH = nr === 90 || nr === 270 ? loaded.width : loaded.height;
+      const ni = inscribedRect(nBaseW, nBaseH, straighten);
+      setCrop({ x: 0, y: 0, w: Math.floor(ni.w), h: Math.floor(ni.h) });
     },
-    [loaded, rotation],
+    [loaded, rotation, straighten],
   );
+
+  /** straighten slider: tilt the image, keep the box where it still fits */
+  const changeStraighten = (value: number) => {
+    setStraighten(value);
+    const ni = inscribedRect(baseW, baseH, value);
+    const nw = Math.floor(ni.w);
+    const nh = Math.floor(ni.h);
+    setCrop((prev) => {
+      if (!prev || nw === 0 || nh === 0) return prev;
+      const w = Math.min(prev.w, nw);
+      const h = Math.min(prev.h, nh);
+      return {
+        x: Math.max(0, Math.min(prev.x, nw - w)),
+        y: Math.max(0, Math.min(prev.y, nh - h)),
+        w,
+        h,
+      };
+    });
+  };
 
   /** flips don't change the dimensions — just reset the box to full */
   const resetCrop = useCallback(() => {
@@ -287,11 +341,15 @@ export function ImageCropper() {
       const fctx = full.getContext("2d");
       if (!fctx) throw new Error("canvas-unsupported");
       fctx.translate(full.width / 2, full.height / 2);
-      fctx.rotate((rotation * Math.PI) / 180);
+      fctx.rotate(((rotation + straighten) * Math.PI) / 180);
       fctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-      const dw = rotation === 90 || rotation === 270 ? full.height : full.width;
-      const dh = rotation === 90 || rotation === 270 ? full.width : full.height;
-      fctx.drawImage(loaded.img, -dw / 2, -dh / 2, dw, dh);
+      fctx.drawImage(
+        loaded.img,
+        (-loaded.width * scale) / 2,
+        (-loaded.height * scale) / 2,
+        loaded.width * scale,
+        loaded.height * scale,
+      );
 
       /* 2. crop the selection out of it */
       const cx = crop.x * scale;
@@ -320,7 +378,7 @@ export function ImageCropper() {
 
       const cropped =
         crop.w < rw - 0.5 || crop.h < rh - 0.5 || crop.x > 0.5 || crop.y > 0.5;
-      const transformed = rotation !== 0 || flipH || flipV;
+      const transformed = rotation !== 0 || straighten !== 0 || flipH || flipV;
       const suffix = cropped ? "-cropped" : transformed ? "-rotated" : "-edited";
       const base = loaded.file.name.replace(/\.[^.]+$/, "") || "image";
       downloadBlob(blob, `${base}${suffix}.${extForMime(mime)}`);
@@ -341,7 +399,7 @@ export function ImageCropper() {
     } finally {
       setSaving(false);
     }
-  }, [loaded, crop, saving, rw, rh, rotation, flipH, flipV, format, qualityPct]);
+  }, [loaded, crop, saving, rw, rh, rotation, straighten, flipH, flipV, format, qualityPct]);
 
   const lossy = loaded ? resolveMime(loaded.file.type, format) !== "image/png" : true;
   const dispBox = crop && previewScale
@@ -464,6 +522,43 @@ export function ImageCropper() {
             >
               <Trash2 className="size-3.5" aria-hidden="true" />
               Start over
+            </Button>
+          </div>
+
+          {/* straighten */}
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="crop-straighten">Straighten</Label>
+                <span className="text-[12.5px] font-bold text-mint-deep dark:text-mint">
+                  {straighten > 0 ? `+${straighten}` : straighten}°
+                </span>
+              </div>
+              <input
+                id="crop-straighten"
+                type="range"
+                min={-15}
+                max={15}
+                step={0.5}
+                value={straighten}
+                onChange={(e) => changeStraighten(Number(e.target.value))}
+                className="mt-3 w-full accent-primary"
+                aria-valuetext={`${straighten} degrees`}
+              />
+              <p className="mt-1.5 text-[11.5px] leading-relaxed text-muted-foreground">
+                Tilts the photo to fix a crooked scan — the frame tightens so
+                the corners stay filled with real image, never white.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => changeStraighten(0)}
+              disabled={straighten === 0}
+              className="text-muted-foreground"
+            >
+              Reset
             </Button>
           </div>
 

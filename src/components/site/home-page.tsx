@@ -43,7 +43,7 @@ export function HomePage() {
 function StatsStrip() {
   const stats = [
     { v: String(TOOLS.length), l: "Tools live", zero: false },
-    { v: "0", l: "Files uploaded", zero: true },
+    { v: "0", l: "Files ever uploaded", zero: true },
     { v: "0", l: "Accounts needed", zero: true },
     { v: "$0", l: "Now and forever", zero: false },
   ];

@@ -24,7 +24,7 @@ export const SR_RATES = {
 
   /* Shown to visitors under the results ("Rates effective: ...").
    * Update this date whenever you change any rate below. */
-  ratesEffective: 'Jul 2026',
+  ratesEffective: 'Nov 2026',
 
   /* ---- STAMP DUTY (32-A Challan) ------------------------------------------
    * URBAN and RURAL are configured separately, because the government can
@@ -56,9 +56,13 @@ export const SR_RATES = {
       baseLow: 500,
       baseHigh: 1000,
     },
-    /* Flat stamp duty (rupees) for a GIFT deed to a LEGAL HEIR on RURAL land.
-     * This special case replaces the whole calculation above. */
+    /* Flat stamp duty (rupees) for a GIFT deed to a LEGAL HEIR.
+     * These special cases replace the whole calculation above — no
+     * percentage rates and no constructed-property addition.
+     * NOTE: the rural side keeps its older reduced-fee behaviour (see
+     * ruralGiftHeir overrides below); only the urban side was updated. */
     ruralGiftHeir: 1000,
+    urbanGiftHeir: 1000,
   },
 
   /* ---- DISTRICT COUNCIL / COMMITTEE FEE -----------------------------------

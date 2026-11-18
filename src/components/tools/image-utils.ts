@@ -30,8 +30,8 @@ export interface LoadedImage {
 }
 
 /** decode a File into an <img> (object URL is revoked after decoding) */
-export function loadImageFile(file: File): Promise<LoadedImage> {
-  const url = URL.createObjectURL(file);
+function imageFromBlob(blob: Blob): Promise<LoadedImage> {
+  const url = URL.createObjectURL(blob);
   return new Promise<LoadedImage>((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -44,6 +44,24 @@ export function loadImageFile(file: File): Promise<LoadedImage> {
     };
     img.src = url;
   });
+}
+
+/**
+ * decode a File into an <img>. HEIC/HEIF (iPhone photos) get a second
+ * chance: Safari decodes them natively; other browsers sniff the bytes and
+ * fall back to the libheif wasm decoder (lazy ~2 MB, bundled with the app —
+ * still nothing uploaded, still works offline once it has loaded once).
+ */
+export async function loadImageFile(file: File): Promise<LoadedImage> {
+  try {
+    return await imageFromBlob(file);
+  } catch (err) {
+    const head = new Uint8Array(await file.slice(0, 32).arrayBuffer());
+    if (looksLikeHeic(head)) {
+      return decodeHeicImage(file); // throws honest HEIC-specific errors
+    }
+    throw err;
+  }
 }
 
 /** map "keep original" onto a format canvas can actually re-encode */
@@ -86,31 +104,167 @@ export function readJpegOrientation(bytes: Uint8Array): number {
       bytes[off + 8] === 0x00 &&
       bytes[off + 9] === 0x00;
     if (isExif) {
-      const t = off + 10; // TIFF header
-      if (t + 8 > len) return 1;
-      const little = bytes[t] === 0x49 && bytes[t + 1] === 0x49;
-      const read16 = (p: number) =>
-        little ? bytes[p] | (bytes[p + 1] << 8) : (bytes[p] << 8) | bytes[p + 1];
-      const read32 = (p: number) =>
-        little
-          ? (bytes[p] | (bytes[p + 1] << 8) | (bytes[p + 2] << 16) | (bytes[p + 3] << 24)) >>> 0
-          : ((bytes[p] << 24) | (bytes[p + 1] << 16) | (bytes[p + 2] << 8) | bytes[p + 3]) >>> 0;
-      const ifd = t + read32(t + 4);
-      if (ifd + 2 > len) return 1;
-      const count = read16(ifd);
-      for (let i = 0; i < count; i++) {
-        const e = ifd + 2 + i * 12;
-        if (e + 12 > len) break;
-        if (read16(e) === 0x0112) {
-          const val = read16(e + 8);
-          return val >= 1 && val <= 8 ? val : 1;
-        }
-      }
-      return 1;
+      return orientationFromTiff(bytes, off + 10, len);
     }
     off += 2 + segLen;
   }
   return 1;
+}
+
+/** orientation (1–8) from the TIFF IFD0 that starts at byte `t`; 1 when
+ * absent or unparsable — shared by the JPEG and HEIC readers */
+function orientationFromTiff(bytes: Uint8Array, t: number, len: number): number {
+  if (t + 8 > len) return 1;
+  const little = bytes[t] === 0x49 && bytes[t + 1] === 0x49;
+  const read16 = (p: number) =>
+    little ? bytes[p] | (bytes[p + 1] << 8) : (bytes[p] << 8) | bytes[p + 1];
+  const read32 = (p: number) =>
+    little
+      ? (bytes[p] | (bytes[p + 1] << 8) | (bytes[p + 2] << 16) | (bytes[p + 3] << 24)) >>> 0
+      : ((bytes[p] << 24) | (bytes[p + 1] << 16) | (bytes[p + 2] << 8) | bytes[p + 3]) >>> 0;
+  const ifd = t + read32(t + 4);
+  if (ifd + 2 > len) return 1;
+  const count = read16(ifd);
+  for (let i = 0; i < count; i++) {
+    const e = ifd + 2 + i * 12;
+    if (e + 12 > len) break;
+    if (read16(e) === 0x0112) {
+      const val = read16(e + 8);
+      return val >= 1 && val <= 8 ? val : 1;
+    }
+  }
+  return 1;
+}
+
+/* ---- HEIC / HEIF intake (iPhone photos) ---------------------------------- */
+
+/** byte-level sniff: an ftyp box with a HEIF-family brand — extensions lie */
+function looksLikeHeic(bytes: Uint8Array): boolean {
+  if (bytes.length < 32) return false;
+  const text = new TextDecoder("latin1").decode(bytes.subarray(4, 32));
+  return (
+    text.startsWith("ftyp") && /heic|heix|hevc|hevx|mif1|msf1|heif/.test(text)
+  );
+}
+
+/** orientation (1–8) of a HEIC file: hunt for an embedded Exif TIFF blob.
+ * libheif honours the container's irot/imir flags but not EXIF, so phone
+ * photos decoded through the wasm path need this or they arrive sideways */
+function readHeicOrientation(bytes: Uint8Array): number {
+  const limit = Math.min(bytes.length, 4 * 1024 * 1024);
+  for (let i = 0; i + 10 <= limit; i++) {
+    if (
+      bytes[i] === 0x45 && // "E"
+      bytes[i + 1] === 0x78 && // "x"
+      bytes[i + 2] === 0x69 && // "i"
+      bytes[i + 3] === 0x66 && // "f"
+      bytes[i + 4] === 0x00 &&
+      bytes[i + 5] === 0x00
+    ) {
+      const t = i + 6;
+      // a TIFF header must follow: "II" or "MM"
+      if (
+        (bytes[t] === 0x49 && bytes[t + 1] === 0x49) ||
+        (bytes[t] === 0x4d && bytes[t + 1] === 0x4d)
+      ) {
+        return orientationFromTiff(bytes, t, limit);
+      }
+    }
+  }
+  return 1;
+}
+
+/** EXIF orientation → canvas transform (mirror/rotate) so phone photos come
+ * out upright, matching what Safari shows for the very same file */
+function applyOrientation(source: HTMLCanvasElement, orientation: number): HTMLCanvasElement {
+  if (orientation <= 1 || orientation > 8) return source;
+  const swap = orientation >= 5; // 5–8 transpose width and height
+  const out = document.createElement("canvas");
+  out.width = swap ? source.height : source.width;
+  out.height = swap ? source.width : source.height;
+  const ctx = out.getContext("2d");
+  if (!ctx) return source;
+  switch (orientation) {
+    case 2: ctx.setTransform(-1, 0, 0, 1, out.width, 0); break;
+    case 3: ctx.setTransform(-1, 0, 0, -1, out.width, out.height); break;
+    case 4: ctx.setTransform(1, 0, 0, -1, 0, out.height); break;
+    case 5: ctx.setTransform(0, 1, 1, 0, 0, 0); break;
+    case 6: ctx.setTransform(0, 1, -1, 0, out.width, 0); break;
+    case 7: ctx.setTransform(0, -1, -1, 0, out.width, out.height); break;
+    case 8: ctx.setTransform(0, -1, 1, 0, 0, out.height); break;
+  }
+  ctx.drawImage(source, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  return out;
+}
+
+/** the wasm decoder, loaded on the first HEIC and remembered after that;
+ * null once = load failed (offline first visit), don't retry every file */
+let heicDecoder:
+  | ((_input: { buffer: ArrayBuffer | Uint8Array }) => Promise<
+      import("heic-decode").HeicDecodeResult
+    >)
+  | null
+  | undefined;
+
+async function loadHeicDecoder() {
+  if (heicDecoder !== undefined) return heicDecoder;
+  try {
+    const mod = await import("heic-decode");
+    heicDecoder = mod.default;
+  } catch {
+    heicDecoder = null;
+  }
+  return heicDecoder;
+}
+
+/** decode a HEIC/HEIF photo through libheif-wasm, upright per its EXIF */
+async function decodeHeicImage(file: File): Promise<LoadedImage> {
+  const decode = await loadHeicDecoder();
+  if (!decode) throw new Error("heic-decoder-unavailable");
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const handles = await decode({ buffer }).catch(() => {
+    throw new Error("heic-decode-failed");
+  });
+  const first = handles[0];
+  if (!first) throw new Error("heic-decode-failed");
+  const decoded = await first.decode().catch(() => {
+    throw new Error("heic-decode-failed");
+  });
+  const raw = document.createElement("canvas");
+  raw.width = decoded.width;
+  raw.height = decoded.height;
+  const rctx = raw.getContext("2d");
+  if (!rctx) throw new Error("canvas-unsupported");
+  rctx.putImageData(
+    new ImageData(new Uint8ClampedArray(decoded.data), decoded.width, decoded.height),
+    0,
+    0,
+  );
+  const upright = applyOrientation(raw, readHeicOrientation(bytes));
+  const blob = await new Promise<Blob>((resolve, reject) =>
+    upright.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("encode-failed"))),
+      "image/png",
+    ),
+  );
+  return imageFromBlob(blob);
+}
+
+/** honest, specific copy for the intake errors tools surface */
+export function imageErrorMessage(err: unknown): string {
+  const code = err instanceof Error ? err.message : "";
+  switch (code) {
+    case "heic-decoder-unavailable":
+      return "iPhone photos (.heic) need a small one-time decoder that couldn't load — check your connection and try again, or convert the photo to JPG first.";
+    case "heic-decode-failed":
+      return "That iPhone photo couldn't be decoded — it may be an unsupported HEIF variant. Export it as JPG/PNG from the Photos app and try again.";
+    case "canvas-unsupported":
+      return "Your browser blocked the image canvas — try a smaller image or another browser.";
+    default:
+      return "The file may be corrupted or in an unsupported format.";
+  }
 }
 
 export type FitMode = "stretch" | "contain" | "cover";

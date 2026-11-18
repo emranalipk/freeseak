@@ -28,6 +28,7 @@ import { ImageDropZone } from "./image-drop";
 import {
   encodeImage,
   formatBytes,
+  imageErrorMessage,
   loadImageFile,
   readJpegOrientation,
 } from "./image-utils";
@@ -106,12 +107,10 @@ export function ImagesToPdf() {
       images.forEach((file, i) => {
         void loadImageFile(file).then(
           ({ width, height }) => updateItem(startId + i, { width, height, status: "ready" }),
-          () =>
+          (err) =>
             updateItem(startId + i, {
               status: "error",
-              error: /heic|heif/i.test(file.type + " " + file.name)
-                ? "HEIC isn't readable in this browser — export the photo as JPG and add it again."
-                : "Couldn't read this image.",
+              error: imageErrorMessage(err),
             }),
         );
       });

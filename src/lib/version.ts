@@ -5,4 +5,4 @@
  * package.json and adds a CHANGELOG.md line — keep this constant in
  * sync with package.json when you bump.
  */
-export const SITE_VERSION = "0.11.0";
+export const SITE_VERSION = "1.0.0";

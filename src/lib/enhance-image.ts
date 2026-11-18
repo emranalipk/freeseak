@@ -4,6 +4,8 @@
  * entirely in the user's browser.
  */
 
+import { loadImageFile } from '@/components/tools/image-utils';
+
 export type Scale = 1 | 2 | 4;
 
 export interface EnhanceSettings {
@@ -126,6 +128,10 @@ async function decodeFile(file: File): Promise<Decoded> {
       img.src = url;
     });
     return { bitmap: img, width: img.naturalWidth, height: img.naturalHeight };
+  } catch {
+    // last chance: the shared intake's HEIC fallback (libheif wasm, local)
+    const { img, width, height } = await loadImageFile(file);
+    return { bitmap: img, width, height };
   } finally {
     URL.revokeObjectURL(url);
   }

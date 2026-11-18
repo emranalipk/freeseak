@@ -19,7 +19,7 @@ import {
   TriangleAlert,
   X,
 } from 'lucide-react';
-import { downloadBlob } from '../image-utils';
+import { downloadBlob, imageErrorMessage } from '../image-utils';
 import {
   EnhanceClient,
   FORMAT_META,
@@ -332,7 +332,7 @@ export function EnhanceTool() {
               : ''),
         );
       } catch (err) {
-        showNotice('error', `Could not read this image: ${err instanceof Error ? err.message : 'unknown error'}`);
+        showNotice('error', `Could not read this image: ${imageErrorMessage(err)}`);
       } finally {
         setLoadingFile(false);
       }

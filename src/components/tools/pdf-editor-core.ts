@@ -39,13 +39,21 @@ import { hexToRgb, loadPdfLib } from "./pdf-utils";
 import { loadPdfJs, renderPdfPage, destroyPdfJsDoc } from "./pdf-render";
 import {
   cssFontFamily,
+  ensureJameelFontFace,
   ensureNotoFontFace,
+  hasArabicScript,
   hasCjk,
   loadNotoBytes,
 } from "./pdf-fonts";
 
 /* re-exported for the editor UI, which imports them from this module */
-export { cssFontFamily, ensureNotoFontFace, needsUnicodeFont } from "./pdf-fonts";
+export {
+  cssFontFamily,
+  ensureJameelFontFace,
+  ensureNotoFontFace,
+  hasArabicScript,
+  needsUnicodeFont,
+} from "./pdf-fonts";
 
 /* ------------------------------------------------------------------ */
 /* types — annotations in normalised display coordinates (y down)      */
@@ -63,7 +71,7 @@ export type EditorTool =
   | "image"
   | "signature";
 
-export type TextFont = "Helvetica" | "Times" | "Courier" | "Noto";
+export type TextFont = "Helvetica" | "Times" | "Courier" | "Noto" | "Jameel";
 
 interface BaseAnnotation {
   id: string;
@@ -194,7 +202,8 @@ export function createPageMapper(page: PDFPage): PageMapper {
         /* display x = user y, display y = user x */
         return { x: dy, y: dx };
       case 180:
-        return { x: uw - dx, y: uh - dy };
+        /* viewer top-left is user bottom-right; +x and +y both flip */
+        return { x: uw - dx, y: dy };
       case 270:
         return { x: uw - dy, y: uh - dx };
       default:
@@ -202,8 +211,12 @@ export function createPageMapper(page: PDFPage): PageMapper {
     }
   };
 
+  /* PDF-space rotation that makes text read left-to-right and upright in
+     the viewer: a /Rotate 90 page needs its text at 90°, not 270° — the
+     minus-sign variant mirrored the reading direction (caught by
+     scripts/test-rotation-burn.ts rendering every rotation with pdf.js) */
   const textRotation = (displayRotation: number) =>
-    (((displayRotation - rotation) % 360) + 360) % 360;
+    (((displayRotation + rotation) % 360) + 360) % 360;
 
   return { displayW, displayH, point, textRotation };
 }
@@ -213,7 +226,7 @@ export function createPageMapper(page: PDFPage): PageMapper {
 /* ------------------------------------------------------------------ */
 
 const STANDARD_FONTS: Record<
-  TextFont,
+  Exclude<TextFont, "Jameel">,
   { regular: StandardFonts; bold: StandardFonts; italic: StandardFonts; boldItalic: StandardFonts }
 > = {
   Helvetica: {
@@ -271,6 +284,11 @@ async function resolveFont(
     }
     cache.set(key, embedded);
     return embedded;
+  }
+  if (font === "Jameel") {
+    /* unreachable — Arabic-script text is diverted to the raster burn —
+       but the type allows it here, so fail loudly instead of mirroring */
+    throw new Error("jameel-cannot-burn-as-vector-text");
   }
   const spec = STANDARD_FONTS[font];
   const standard =
@@ -337,6 +355,78 @@ async function drawTextAnnotation(
   }
 }
 
+/**
+ * Burn one Arabic-script (Urdu) text annotation as a transparent overlay
+ * image. pdf-lib can embed glyphs but cannot shape them — Nastaliq
+ * ligatures and bidi need a real text engine, which is the browser's
+ * canvas. The overlay is painted straight in user space (y-up), so page
+ * rotation needs no extra placement math, and at ~216 dpi so it stays
+ * crisp in print. The words are an image afterwards — the honest note
+ * says so.
+ */
+async function drawTextAnnotationRaster(
+  doc: PDFDocument,
+  page: PDFPage,
+  mapper: PageMapper,
+  anno: TextAnnotation,
+  onNote: (_note: string) => void,
+): Promise<void> {
+  const SCALE = 3;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(page.getWidth() * SCALE));
+  canvas.height = Math.max(1, Math.round(page.getHeight() * SCALE));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas-unsupported");
+  await ensureJameelFontFace();
+
+  /* user space: origin bottom-left, y up — canvas y runs the other way */
+  ctx.translate(0, canvas.height);
+  ctx.scale(SCALE, SCALE);
+  ctx.scale(1, -1);
+  ctx.textBaseline = "alphabetic";
+  ctx.direction = "ltr"; // same bidi base as the editor's live preview
+
+  const lines = anno.text.split("\n");
+  const lineHeight = anno.size * TEXT_LINE_FACTOR;
+  const rot = mapper.textRotation(anno.rotation);
+  const family = hasArabicScript(anno.text)
+    ? cssFontFamily("Jameel")
+    : cssFontFamily(anno.font);
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].length === 0) continue;
+    const baselineNy =
+      (anno.y * mapper.displayH + i * lineHeight + anno.size * BASELINE_FACTOR) /
+      mapper.displayH;
+    const p = mapper.point(anno.x, baselineNy);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    /* the canvas already paints in user space (y flipped once above), so
+       the rotation sign is the PDF one — mirrored signs read vertically */
+    ctx.rotate((rot * Math.PI) / 180);
+    ctx.scale(1, -1); // canvas text paints y-down; we are in y-up space
+    ctx.font = `${anno.italic ? "italic " : ""}${anno.bold ? "700 " : ""}${anno.size}px ${family}`;
+    ctx.fillText(lines[i], 0, 0);
+    ctx.restore();
+  }
+
+  const blob = await new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("encode-failed"))),
+      "image/png",
+    ),
+  );
+  const img = await doc.embedPng(new Uint8Array(await blob.arrayBuffer()));
+  page.drawImage(img, {
+    x: 0,
+    y: 0,
+    width: page.getWidth(),
+    height: page.getHeight(),
+  });
+  onNote(
+    `Urdu/Arabic text (“${anno.text.slice(0, 24)}${anno.text.length > 24 ? "…" : ""}”) was burned as a high-quality image in Jameel Noori Nastaleeq — PDF can't shape Arabic script, so those words are not selectable.`,
+  );
+}
+
 async function burnAnnotation(
   doc: PDFDocument,
   cache: FontCache,
@@ -348,6 +438,13 @@ async function burnAnnotation(
 ): Promise<void> {
   switch (anno.kind) {
     case "text":
+      if (hasArabicScript(anno.text) || anno.font === "Jameel") {
+        /* pdf-lib can place glyphs but cannot shape them — Nastaliq
+           ligatures and bidi need a text engine, which is what the
+           browser's canvas is. Burn Urdu the way the preview showed it. */
+        await drawTextAnnotationRaster(doc, page, mapper, anno, onNote);
+        return;
+      }
       await drawTextAnnotation(doc, cache, page, mapper, anno, onNote);
       return;
 
@@ -567,8 +664,16 @@ export async function drawAnnotationsOnCanvas(
         const sizePx = anno.size * pxPerPt;
         ctx.fillStyle = anno.color;
         ctx.textBaseline = "alphabetic";
-        await ensureNotoFontFace();
-        ctx.font = `${anno.italic ? "italic " : ""}${anno.bold ? "700 " : ""}${sizePx}px ${cssFontFamily(anno.font)}`;
+        ctx.direction = "ltr"; // same bidi base the burn path uses
+        if (anno.font === "Jameel" || hasArabicScript(anno.text)) {
+          await ensureJameelFontFace();
+        } else {
+          await ensureNotoFontFace();
+        }
+        const family = hasArabicScript(anno.text)
+          ? cssFontFamily("Jameel")
+          : cssFontFamily(anno.font);
+        ctx.font = `${anno.italic ? "italic " : ""}${anno.bold ? "700 " : ""}${sizePx}px ${family}`;
         const start = {
           x: anno.x * width,
           y: anno.y * height + anno.size * BASELINE_FACTOR * pxPerPt,

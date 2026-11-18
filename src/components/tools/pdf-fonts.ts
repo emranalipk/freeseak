@@ -15,15 +15,24 @@
  * editor engine into their chunk.
  */
 
-export type SharedTextFont = "Helvetica" | "Times" | "Courier" | "Noto";
+export type SharedTextFont = "Helvetica" | "Times" | "Courier" | "Noto" | "Jameel";
 
 export const NOTO_FONT_NAME = "Noto Sans Editor";
 export const NOTO_SC_FONT_NAME = "Noto Sans SC Editor";
 export const NOTO_CSS_FAMILY = `'${NOTO_FONT_NAME}', '${NOTO_SC_FONT_NAME}', sans-serif`;
+/** Urdu face — the site-wide @font-face from globals.css (the registry
+ * estimator ships it); the editor borrows it for Arabic-script text */
+export const JAMEEL_FONT_NAME = "Jameel Noori Nastaleeq";
+export const JAMEEL_CSS_FAMILY = `'${JAMEEL_FONT_NAME}'`;
 
 /** true when a string needs the embedded Unicode font (beyond WinAnsi) */
 export function needsUnicodeFont(text: string): boolean {
   return /[^\u0000-\u00ff]/.test(text);
+}
+
+/** Arabic-script ranges — Urdu, Arabic, Persian (Nastaliq shaping territory) */
+export function hasArabicScript(text: string): boolean {
+  return /[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff\ufb50-\ufdff\ufe70-\ufeff]/.test(text);
 }
 
 /** CJK ranges — the SC pack covers Han, Kana and Bopomofo subsets */
@@ -39,6 +48,8 @@ export function cssFontFamily(font: SharedTextFont): string {
       return "'Courier New', Courier, monospace";
     case "Noto":
       return NOTO_CSS_FAMILY;
+    case "Jameel":
+      return `${JAMEEL_CSS_FAMILY}, sans-serif`;
     default:
       return "Helvetica, Arial, sans-serif";
   }
@@ -60,6 +71,19 @@ export async function ensureNotoFontFace(): Promise<void> {
 }
 
 let notoBytesCache: Record<string, Promise<ArrayBuffer>> = {};
+
+let jameelFaceLoaded = false;
+
+/** the Urdu face is declared site-wide in globals.css; make sure its glyphs
+ * are actually loaded before any canvas draws with it (canvas silently
+ * falls back to the previous font otherwise) */
+export async function ensureJameelFontFace(): Promise<void> {
+  if (jameelFaceLoaded) return;
+  jameelFaceLoaded = true;
+  await document.fonts
+    .load(`16px "${JAMEEL_FONT_NAME}"`, "اردو FreeSeak 0123")
+    .catch(() => {});
+}
 
 /** the raw TTFs for pdf-lib embedding — fetched once, then cached */
 export function loadNotoBytes(variant: "regular" | "bold" | "sc"): Promise<ArrayBuffer> {

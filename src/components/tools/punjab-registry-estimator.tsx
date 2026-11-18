@@ -1217,7 +1217,7 @@ export function PunjabRegistryEstimator() {
                         <span className="ml-2 font-medium text-muted-foreground">
                           {e.res.urban ? t("urban") : t("rural")} ·{" "}
                           {e.res.isGift ? t("gift") : t("conveyance")}
-                          {e.res.rgh ? ` · ${t("legalHeir")}: ${t("yes")}` : ""}
+                          {e.res.gh ? ` · ${t("legalHeir")}: ${t("yes")}` : ""}
                         </span>
                       </p>
                       <p className="text-[11px] text-muted-foreground">

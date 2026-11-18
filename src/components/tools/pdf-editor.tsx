@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { imageErrorMessage, loadImageFile } from "./image-utils";
 import {
   Circle,
   Eraser,
@@ -53,8 +54,10 @@ import {
   TEXT_LINE_FACTOR,
   buildSamplePdf,
   cssFontFamily,
+  ensureJameelFontFace,
   ensureNotoFontFace,
   exportEditedPdf,
+  hasArabicScript,
   readFormFields,
   applyFormValues,
   uid,
@@ -170,23 +173,25 @@ function shapeBBox(anno: Annotation) {
   return { x: box.x, y: box.y, w: box.w, h: box.h };
 }
 
-/** downscale + re-encode a dropped image so embedded PDFs stay small */
+/** downscale + re-encode a dropped image so embedded PDFs stay small.
+ * HEIC/HEIF (iPhone photos) go through the shared intake and re-encode to
+ * PNG — PDF viewers can't read HEIC bytes, so the stamp must be raster. */
 async function processImageFile(file: File): Promise<{
   url: string;
   mime: "image/png" | "image/jpeg";
   bytes: Uint8Array;
   aspect: number;
 }> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
-  const w = Math.max(1, Math.round(bitmap.width * scale));
-  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const { img } = await loadImageFile(file);
+  const scale = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.max(1, Math.round(img.naturalWidth * scale));
+  const h = Math.max(1, Math.round(img.naturalHeight * scale));
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
-  canvas.getContext("2d")?.drawImage(bitmap, 0, 0, w, h);
-  bitmap.close();
-  const mime = file.type === "image/jpeg" ? "image/jpeg" : "image/png";
+  canvas.getContext("2d")?.drawImage(img, 0, 0, w, h);
+  const mime: "image/png" | "image/jpeg" =
+    file.type === "image/jpeg" ? "image/jpeg" : "image/png";
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode-failed"))), mime, 0.92);
   });
@@ -194,7 +199,7 @@ async function processImageFile(file: File): Promise<{
     url: URL.createObjectURL(blob),
     mime,
     bytes: new Uint8Array(await blob.arrayBuffer()),
-    aspect: bitmap.width / bitmap.height,
+    aspect: img.naturalWidth / img.naturalHeight,
   };
 }
 
@@ -700,6 +705,7 @@ export function PdfEditor() {
     setEditingId(anno.id);
     setTool("select");
     if (anno.font === "Noto") void ensureNotoFontFace();
+    if (anno.font === "Jameel") void ensureJameelFontFace();
   };
 
   const onOverlayPointerDown = (e: React.PointerEvent) => {
@@ -930,8 +936,8 @@ export function PdfEditor() {
     try {
       const item = await processImageFile(file);
       placeImage(item, "image");
-    } catch {
-      toast.error("Couldn't read that image — try a PNG or JPG.");
+    } catch (err) {
+      toast.error(imageErrorMessage(err));
     }
   };
 
@@ -1096,6 +1102,19 @@ export function PdfEditor() {
   useEffect(() => {
     if (needsNoto) void ensureNotoFontFace();
   }, [needsNoto]);
+
+  /* the Urdu face (globals.css @font-face) must be loaded before any canvas
+     — preview or burn — draws with it, or it silently falls back */
+  const needsJameel = useMemo(
+    () =>
+      annos.some(
+        (a) => a.kind === "text" && (a.font === "Jameel" || hasArabicScript(a.text)),
+      ),
+    [annos],
+  );
+  useEffect(() => {
+    if (needsJameel) void ensureJameelFontFace();
+  }, [needsJameel]);
 
   /* what the properties panel edits: selection or defaults */
   const isSel = (kind: Annotation["kind"]) => selected?.kind === kind;
@@ -1673,6 +1692,7 @@ export function PdfEditor() {
                         <option value="Times">Times</option>
                         <option value="Courier">Courier</option>
                         <option value="Noto">Noto Sans (world scripts)</option>
+                        <option value="Jameel">Jameel Noori Nastaleeq — اردو</option>
                       </select>
                     </div>
                     <div className="flex items-center justify-between gap-2">
@@ -1716,7 +1736,10 @@ export function PdfEditor() {
                           if (textSrc) patchSelected({ italic });
                           patchDefaults({ italic });
                         }}
-                        disabled={(textSrc?.font ?? defaults.font) === "Noto"}
+                        disabled={
+                          (textSrc?.font ?? defaults.font) === "Noto" ||
+                          (textSrc?.font ?? defaults.font) === "Jameel"
+                        }
                         className="h-8 flex-1 italic"
                       >
                         I

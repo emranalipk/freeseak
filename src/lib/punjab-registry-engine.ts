@@ -61,6 +61,7 @@ export interface SrRegistryResult {
   lh: SrYesNo;
   constructed: boolean;
   isGift: boolean;
+  gh: boolean; // gift to a legal heir (either location) — reduced-fee case
   rgh: boolean; // rural gift to legal heir — the special reduced-fee case
   stamp: number;
   committee: number;
@@ -113,13 +114,17 @@ export function calculateRegistry(input: SrRegistryInput): SrCalcOutcome {
   const urban = loc === 'urban';
   const constructed = pt === 'c';
   const isGift = deed === 'gift';
-  const rgh = !urban && isGift && lhVal === 'yes'; // rural gift to legal heir
+  const gh = isGift && lhVal === 'yes'; // gift to a legal heir (either location)
+  const rgh = gh && !urban; // rural gift to legal heir
 
   // --- validation (same order as the original tool) ---
   if (constructed && constrVal <= 0) return { ok: false, error: 'missingConstruction' };
   if (landVal <= 0) return { ok: false, error: 'missingLandValue' };
   if (total <= 0) return { ok: false, error: 'totalZero' };
-  if (!rgh) {
+  // Shares affect no fee on a gift-to-legal-heir deed (FBR is off), so the
+  // original tool skipped validation for the rural case; that now covers the
+  // urban case too.
+  if (!gh) {
     const bs = partySharesSum(input.buyers);
     const ss = partySharesSum(input.sellers);
     if (Math.abs(bs - 100) > SHARE_TOLERANCE)
@@ -134,6 +139,9 @@ export function calculateRegistry(input: SrRegistryInput): SrCalcOutcome {
   let stamp: number;
   if (rgh) {
     stamp = R.stamp.ruralGiftHeir;
+  } else if (gh) {
+    // Urban gift to legal heir: flat stamp duty, no constructed addition.
+    stamp = R.stamp.urbanGiftHeir;
   } else {
     const cfg = urban ? R.stamp.urban : R.stamp.rural;
     stamp = constructed
@@ -160,7 +168,7 @@ export function calculateRegistry(input: SrRegistryInput): SrCalcOutcome {
 
   // --- FBR withholding (per person, by share) ---
   // Applies to conveyance deeds, and to gifts ONLY when the receiver is NOT
-  // a legal heir. Never applies to the rural-gift-to-legal-heir case.
+  // a legal heir. Never applies to a gift-to-legal-heir deed (either location).
   const fbrOk = !rgh && (deed === 'conveyance' || (isGift && lhVal === 'no'));
 
   let btTot = 0;
@@ -206,7 +214,7 @@ export function calculateRegistry(input: SrRegistryInput): SrCalcOutcome {
   return {
     ok: true,
     result: {
-      landVal, constrVal, total, urban, loc, deed, pt, lh: lhVal, constructed, isGift, rgh,
+      landVal, constrVal, total, urban, loc, deed, pt, lh: lhVal, constructed, isGift, gh, rgh,
       stamp, committee, plra, borFee, mutFee, plraMut, c32Tot,
       btTot, btDet, stTot, stDet, fbrTot, fbrOk,
       filerSaving, buyerSaving, sellerSaving,

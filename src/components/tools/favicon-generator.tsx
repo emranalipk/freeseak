@@ -11,37 +11,85 @@ import {
   downloadBlob,
   encodeImage,
   formatBytes,
+  imageErrorMessage,
   loadImageFile,
   loadJsZip,
 } from "./image-utils";
 
 /**
- * FreeSeak — Favicon Generator (v0.8.0).
+ * FreeSeak — Favicon Generator (v1.0.0).
  *
- * Turns one image into a complete icon pack (favicon.ico with 16/32/48
- * built as a real multi-size ICO, PNGs for browsers and touch devices,
- * a web manifest and a copy-paste HTML snippet) — one branded .zip,
- * built entirely in the browser.
+ * Turns one image into a complete modern icon pack (favicon.ico with
+ * 16/32/48 built as a real multi-size ICO, PNGs for browsers and touch
+ * devices, maskable Android icons, an SVG favicon, a Windows tile config,
+ * a web manifest and a copy-paste HTML snippet) — one branded .zip, built
+ * entirely in the browser.
  */
 
-/** every size the pack ships, and what each is for */
+/** every raster the pack ships, and what each is for */
 const PNG_SIZES = [
-  { size: 16, file: "favicon-16x16.png" },
-  { size: 32, file: "favicon-32x32.png" },
-  { size: 48, file: "favicon-48x48.png" },
-  { size: 180, file: "apple-touch-icon.png" },
-  { size: 192, file: "android-chrome-192x192.png" },
-  { size: 512, file: "android-chrome-512x512.png" },
+  { size: 16, file: "favicon-16x16.png", kind: "plain" },
+  { size: 32, file: "favicon-32x32.png", kind: "plain" },
+  { size: 48, file: "favicon-48x48.png", kind: "plain" },
+  { size: 96, file: "favicon-96x96.png", kind: "plain" },
+  { size: 150, file: "mstile-150x150.png", kind: "plain" },
+  { size: 180, file: "apple-touch-icon.png", kind: "apple" },
+  { size: 192, file: "android-chrome-192x192.png", kind: "plain" },
+  { size: 512, file: "android-chrome-512x512.png", kind: "plain" },
+  { size: 192, file: "android-chrome-maskable-192x192.png", kind: "maskable" },
+  { size: 512, file: "android-chrome-maskable-512x512.png", kind: "maskable" },
 ] as const;
 
 /** the .ico bundles these three (PNG-in-ICO, valid since Vista) */
 const ICO_SIZES = [16, 32, 48] as const;
 
-const SNIPPET = `<link rel="icon" href="/favicon.ico" sizes="any">
+/** the <head> snippet — theme colour tracks the tile background colour */
+function buildSnippet(themeColor: string): string {
+  return `<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">`;
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="${themeColor}">
+<meta name="msapplication-config" content="/browserconfig.xml">`;
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("read-failed"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** maskable icon: the logo shrunk into the safe zone (central ~80% circle),
+ * flattened onto the tile background so any launcher can crop it freely */
+function drawMaskable(
+  img: HTMLImageElement,
+  size: number,
+  bg: string,
+): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas-unsupported");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, size, size);
+  const inner = size * 0.7; /* logo fits inside the safe zone with margin */
+  const scale = Math.min(inner / img.width, inner / img.height);
+  const w = img.width * scale;
+  const h = img.height * scale;
+  ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("encode-failed"))),
+      "image/png",
+    ),
+  );
+}
 
 /** concatenate PNGs into a multi-size .ico (PNG-in-ICO binary format) */
 async function buildIco(
@@ -77,7 +125,9 @@ async function buildIco(
 
 interface Pack {
   ico: Blob;
-  pngs: { size: number; file: string; blob: Blob; url: string }[];
+  svg: Blob;
+  browserconfig: Blob;
+  pngs: { size: number; file: string; kind: string; blob: Blob; url: string }[];
   totalBytes: number;
   note?: string;
 }
@@ -118,9 +168,9 @@ export function FaviconGenerator() {
       urlsRef.current.push(url);
       setLoaded({ file, img: res.img, width: res.width, height: res.height, url });
       setPack(null);
-    } catch {
+    } catch (err) {
       toast.error(`Couldn't read “${file.name}”`, {
-        description: "The file may be corrupted or in an unsupported format.",
+        description: imageErrorMessage(err),
       });
     }
   }, []);
@@ -130,11 +180,19 @@ export function FaviconGenerator() {
     setBusy(true);
     try {
       const pngs: Pack["pngs"] = [];
-      for (const { size, file } of PNG_SIZES) {
+      let svg: Blob | null = null;
+      for (const { size, file, kind } of PNG_SIZES) {
+        if (kind === "maskable") {
+          const blob = await drawMaskable(loaded.img, size, touchBg);
+          const url = URL.createObjectURL(blob);
+          urlsRef.current.push(url);
+          pngs.push({ size, file, kind, blob, url });
+          continue;
+        }
         /* centre-crop to a square at each size (cover fit). The apple-touch
            icon is flattened: iOS composites transparent PNGs onto BLACK on
            home screens, so a transparent logo ships with an ugly black tile */
-        const isAppleTouch = file === "apple-touch-icon.png";
+        const isAppleTouch = kind === "apple";
         const encoded = await encodeImage(loaded.img, {
           width: size,
           height: size,
@@ -145,7 +203,19 @@ export function FaviconGenerator() {
         });
         const url = URL.createObjectURL(encoded.blob);
         urlsRef.current.push(url);
-        pngs.push({ size, file, blob: encoded.blob, url });
+        pngs.push({ size, file, kind, blob: encoded.blob, url });
+        /* favicon.svg = the 32 px render inside an SVG shell — an honest
+           raster-in-SVG for browsers that prefer SVG icons; swap in a real
+           vector of your logo if you have one */
+        if (file === "favicon-32x32.png") {
+          const dataUrl = await blobToDataUrl(encoded.blob);
+          svg = new Blob(
+            [
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><image width="32" height="32" href="${dataUrl}"/></svg>`,
+            ],
+            { type: "image/svg+xml" },
+          );
+        }
       }
       const ico = await buildIco(
         ICO_SIZES.map((size) => ({
@@ -153,20 +223,33 @@ export function FaviconGenerator() {
           blob: pngs.find((p) => p.size === size)!.blob,
         })),
       );
+      /* the 32 px render always happens (PNG_SIZES includes it) — this guard
+         keeps TypeScript honest about it */
+      if (!svg) throw new Error("encode-failed");
+      const browserconfig = new Blob(
+        [
+          `<?xml version="1.0" encoding="utf-8"?><browserconfig><msapplication><tile><square150x150logo src="/mstile-150x150.png"/><TileColor>${touchBg}</TileColor></tile></msapplication></browserconfig>`,
+        ],
+        { type: "text/xml" },
+      );
       const totalBytes =
-        ico.size + pngs.reduce((sum, p) => sum + p.blob.size, 0);
+        ico.size + svg.size + browserconfig.size +
+        pngs.reduce((sum, p) => sum + p.blob.size, 0);
       const smallestSide = Math.min(loaded.width, loaded.height);
       setPack({
         ico,
+        svg,
+        browserconfig,
         pngs,
         totalBytes,
         note:
           smallestSide < 512
-            ? `Your image is ${smallestSide} px on its short side — every icon larger than that (192 and 512 px) is upscaled and may look soft. A square image of at least 512 × 512 px gives the sharpest pack.`
+            ? `Your image is ${smallestSide} px on its short side — every icon larger than that (96 px and up) is upscaled and may look soft. A square image of at least 512 × 512 px gives the sharpest pack.`
             : undefined,
       });
       toast.success("Favicon pack ready", {
-        description: "7 icon files + manifest + install snippet — built on your device.",
+        description:
+          "15 files: icons, SVG, maskable set, tile config, manifest, README — built on your device.",
       });
     } catch {
       toast.error("Couldn't build the pack", {
@@ -184,6 +267,10 @@ export function FaviconGenerator() {
       const name = siteName.trim() || "My Site";
       const manifest = {
         name,
+        short_name: name.length > 12 ? `${name.slice(0, 12).trim()}…` : name,
+        start_url: "/",
+        theme_color: touchBg,
+        background_color: touchBg,
         icons: [
           {
             src: "/android-chrome-192x192.png",
@@ -195,6 +282,18 @@ export function FaviconGenerator() {
             sizes: "512x512",
             type: "image/png",
           },
+          {
+            src: "/android-chrome-maskable-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "maskable",
+          },
+          {
+            src: "/android-chrome-maskable-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
         ],
       };
       const readme = `FreeSeak favicon pack — ${name}
@@ -205,21 +304,39 @@ export function FaviconGenerator() {
 
 2. Add these lines to the <head> of every page:
 
-${SNIPPET}
+${buildSnippet(touchBg)}
 
 3. Publish. Hard-refresh (Ctrl+F5 / Cmd+Shift+R) — browsers cache
    favicons aggressively.
 
 Files in this pack
 ------------------
-favicon.ico               16 + 32 + 48 px, all browsers
-favicon-16x16.png         modern browsers
-favicon-32x32.png         modern browsers
-favicon-48x48.png         desktop browsers
-apple-touch-icon.png      180 px — iOS home screen / bookmarks
+favicon.ico                 16 + 32 + 48 px, all browsers
+favicon.svg                 SVG shell around the 32 px render — swap in a
+                            real vector of your logo if you have one
+favicon-16x16.png           modern browsers
+favicon-32x32.png           modern browsers
+favicon-48x48.png           desktop browsers
+favicon-96x96.png           Google / Android shortcut size
+apple-touch-icon.png        180 px — iOS home screen / bookmarks, flattened
+                            onto the tile background colour
 android-chrome-192x192.png  Android home screen
 android-chrome-512x512.png  Android home screen (hi-dpi)
-site.webmanifest          links the Android icons + app name
+android-chrome-maskable-192x192.png  Android adaptive icon — logo shrunk
+                            into the safe zone so any launcher shape crops
+                            it without cutting the artwork
+android-chrome-maskable-512x512.png  maskable, hi-dpi
+mstile-150x150.png          Windows tile image
+browserconfig.xml           points Windows at the tile + its colour
+site.webmanifest            app name, brand colours + icon links
+
+Notes
+-----
+• The snippet uses root-relative paths (/favicon.ico). If your site lives
+  in a subfolder (github.io/site/ …), strip the leading slash — favicon.ico
+  instead of /favicon.ico — or the icons will 404.
+• theme-color in the snippet and the manifest is ${touchBg}. Change it if
+  you rebrand later.
 
 Generated with FreeSeak — free, private, browser-only tools.
 https://freeseak.com
@@ -229,6 +346,8 @@ https://freeseak.com
       const JSZip = await loadJsZip();
       const zip = new JSZip();
       zip.file("favicon.ico", pack.ico);
+      zip.file("favicon.svg", pack.svg);
+      zip.file("browserconfig.xml", pack.browserconfig);
       for (const p of pack.pngs) zip.file(p.file, p.blob);
       zip.file(
         "site.webmanifest",
@@ -249,14 +368,14 @@ https://freeseak.com
 
   const copySnippet = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(SNIPPET);
+      await navigator.clipboard.writeText(buildSnippet(touchBg));
       toast.success("HTML snippet copied", {
         description: "Paste it into the <head> of every page.",
       });
     } catch {
       toast.error("Couldn't copy — select the snippet and copy manually.");
     }
-  }, []);
+  }, [touchBg]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -292,7 +411,7 @@ https://freeseak.com
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="touch-bg">iOS tile background</Label>
+              <Label htmlFor="touch-bg">Tile background colour</Label>
               <div className="flex items-center gap-2 rounded-lg border border-input px-2.5 py-1.5">
                 <input
                   id="touch-bg"
@@ -300,15 +419,16 @@ https://freeseak.com
                   value={touchBg}
                   onChange={(e) => setTouchBg(e.target.value)}
                   className="size-7 cursor-pointer rounded-md border-0 bg-transparent p-0"
-                  aria-label="Background colour for the apple-touch icon"
+                  aria-label="Background colour for the apple-touch and maskable icons"
                 />
                 <span className="font-mono text-[12.5px] uppercase text-muted-foreground">
                   {touchBg}
                 </span>
               </div>
               <p className="max-w-56 text-[11px] leading-relaxed text-muted-foreground">
-                iOS fills transparent home-screen icons with black — the
-                apple-touch icon is flattened onto this colour to prevent that.
+                iOS fills transparent home-screen icons with black, and
+                Android crops maskable icons to a shape — the apple-touch and
+                maskable icons are flattened onto this colour to survive both.
               </p>
             </div>
             <Button
@@ -356,8 +476,8 @@ https://freeseak.com
                   className="mr-1 inline size-3.5 text-mint-deep dark:text-mint"
                   aria-hidden="true"
                 />
-                favicon.ico (16+32+48) · 6 PNGs · site.webmanifest · README —{" "}
-                {formatBytes(pack.totalBytes)}
+                favicon.ico (16+32+48) · 10 PNGs + favicon.svg · tile config ·
+                manifest · README — {formatBytes(pack.totalBytes)}
               </p>
             )}
           </div>
@@ -415,7 +535,7 @@ https://freeseak.com
                   </Button>
                 </div>
                 <pre className="overflow-x-auto p-3 text-[11.5px] leading-relaxed text-foreground">
-                  <code>{SNIPPET}</code>
+                  <code>{buildSnippet(touchBg)}</code>
                 </pre>
               </div>
             </div>

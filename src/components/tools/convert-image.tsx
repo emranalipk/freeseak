@@ -17,6 +17,7 @@ import {
   downloadBlob,
   encodeImage,
   formatBytes,
+  imageErrorMessage,
   loadImageFile,
   outputFilename,
   zipAndDownload,
@@ -164,9 +165,9 @@ export function ImageConverter() {
             height: loaded.height,
             status: "queued",
           });
-        } catch {
+        } catch (err) {
           toast.error(`Couldn't read “${file.name}”`, {
-            description: "The file may be corrupted or in an unsupported format.",
+            description: imageErrorMessage(err),
           });
         }
       }

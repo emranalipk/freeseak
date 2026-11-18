@@ -75,7 +75,7 @@ export const TOOLS: ToolDef[] = [
     id: "edit-pdf",
     name: "Edit PDF",
     short:
-      "Edit PDF files free online — add real text, sign, white-out, highlight, draw, stamp images, fill forms, OCR scans. No sign-up, nothing uploaded.",
+      "Edit PDF files free online — add real text (Urdu in Jameel Noori Nastaleeq too), sign, white-out, highlight, draw, stamp images, fill forms, OCR scans. No sign-up, nothing uploaded.",
     tagline: "Rewrite text, sign, redact — even OCR a scanned page.",
     category: "pdf",
     icon: "pen",
@@ -126,10 +126,11 @@ export const TOOLS: ToolDef[] = [
     keywords:
       "merge pdf combine pdf files join pdf pdf merger put pdfs together merge multiple pdfs into one combine pdf documents free merge pdf without uploading no limit no sign up combine scanned pdfs append pdf",
     intro:
-      "Combine any number of PDFs into a single document, in exactly the order you want. Contracts, bank statements, scans, CVs — drop them in, arrange them with the arrows, and download one clean file. The merging happens entirely in your browser, which matters here more than anywhere: a merged PDF is often a full financial or legal history, and with FreeSeak it never leaves your device. No page limits, no file-size limits, no daily quota — the usual limits exist because someone else pays the server; there is no server.",
+      "Combine any number of PDFs into a single document, in exactly the order you want. Contracts, bank statements, scans, CVs — drop them in, arrange them with the arrows, take whole files or just selected page ranges, even interleave pages across files, and download one clean file. The merging happens entirely in your browser, which matters here more than anywhere: a merged PDF is often a full financial or legal history, and with FreeSeak it never leaves your device. No page limits, no file-size limits, no daily quota — the usual limits exist because someone else pays the server; there is no server.",
     howTo: [
       "Drop your PDFs onto the page, click to browse, or paste them from the clipboard.",
       "Arrange the order with the up and down arrows — files merge from top to bottom.",
+      "Optionally type page ranges under a file (like 1-3, 5) and pick Sequential or Interleaved page order.",
       "Press Merge and download your combined PDF.",
     ],
     faq: [
@@ -148,6 +149,10 @@ export const TOOLS: ToolDef[] = [
       {
         q: "Can I reorder the files before merging?",
         a: "Yes — the arrows next to each file set the order. The download is named after the first file in the list, with “-merged” added.",
+      },
+      {
+        q: "Can I take only some pages from each file, or interleave the pages?",
+        a: "Both. Every file in the queue has a pages box — type single pages and ranges (1-3, 5) to take just those pages, or leave it empty for the whole file. The page-order selector then decides how the picked pages are stacked: Sequential places each file after the previous one, Interleaved takes one page from each file in turn, so an odd-pages scan and an even-pages scan become one clean document. If files have different lengths, the longer ones keep contributing at the end.",
       },
     ],
   },
@@ -191,12 +196,12 @@ export const TOOLS: ToolDef[] = [
     id: "images-to-pdf",
     name: "Images to PDF",
     short:
-      "Convert JPG and PNG images to one PDF free — drag, drop, reorder, and pick fit-to-image, A4 or Letter pages. No sign-up, nothing uploaded.",
+      "Convert JPG, PNG, WebP and iPhone HEIC photos to one PDF free — drag, drop, reorder, and pick fit-to-image, A4 or Letter pages. No sign-up, nothing uploaded.",
     tagline: "Photos in, one tidy document out.",
     category: "pdf",
     icon: "file-image",
     keywords:
-      "jpg to pdf png to pdf image to pdf convert images to pdf photo to pdf make a pdf from pictures multiple images into one pdf picture to pdf document scan to pdf jpeg to pdf free no watermark no sign up",
+      "jpg to pdf png to pdf image to pdf convert images to pdf photo to pdf make a pdf from pictures multiple images into one pdf picture to pdf document scan to pdf jpeg to pdf heic to pdf iphone photos to pdf free no watermark no sign up",
     intro:
       "Turn photos and scans into a single, shareable PDF. Drag your JPGs and PNGs in, set the order with the arrows, and choose how they sit on the page: fitted to each image with no borders, or centred on A4 / Letter pages with a margin — handy for printing and for upload portals that demand “a PDF”. JPG and PNG files are embedded without recompression — and phone photos are rotated upright automatically — so quality and orientation are exactly what you started with. Everything runs in your browser: your photos never touch a server.",
     howTo: [
@@ -636,8 +641,8 @@ export const TOOLS: ToolDef[] = [
     id: "crop-image",
     name: "Crop & Rotate Image",
     short:
-      "Crop images free online — drag a box, lock an aspect ratio like 1:1 or 16:9, rotate and flip, download at full resolution. Nothing uploaded.",
-    tagline: "Drag a box, lock a ratio, rotate and flip.",
+      "Crop images free online — drag a box, lock an aspect ratio like 1:1 or 16:9, rotate, flip, or straighten crooked scans, download at full resolution. Nothing uploaded.",
+    tagline: "Drag a box, lock a ratio, straighten, rotate and flip.",
     category: "image",
     icon: "crop",
     keywords:
@@ -647,10 +652,14 @@ export const TOOLS: ToolDef[] = [
     howTo: [
       "Drop an image onto the page, click to browse, or paste it from the clipboard.",
       "Drag the corners of the selection box over the part you want to keep, or lock an aspect ratio like 1:1 first.",
-      "Use the rotate and flip buttons to straighten or mirror the image if needed.",
+      "Use the rotate and flip buttons, or the Straighten slider for crooked scans and tilted horizons.",
       "Pick the output format and quality, then press Download — the crop is saved at full resolution.",
     ],
     faq: [
+      {
+        q: "How does the Straighten slider work?",
+        a: "It tilts the photo by up to 15° in either direction to fix a crooked scan or a tilted horizon. The frame automatically tightens to the largest straight rectangle that stays fully inside the tilted image — so the corners are always real image, never white gaps, and whatever you see selected is exactly what downloads.",
+      },
       {
         q: "Does cropping reduce the quality of my image?",
         a: "No. Cropping just selects pixels — the part you keep is saved at its original, full resolution. The one honest exception: images larger than the browser's ~16-megapixel canvas cap are scaled to the largest browser-safe size, and the tool tells you when that happens. Only the format choice otherwise matters: saving as JPG or WebP re-compresses, PNG is lossless.",
@@ -673,14 +682,14 @@ export const TOOLS: ToolDef[] = [
     id: "favicon-generator",
     name: "Favicon Generator",
     short:
-      "Generate a complete favicon pack free — one image in, get favicon.ico, PNG icons, apple-touch-icon, a webmanifest and the HTML. No uploads.",
-    tagline: "One image in — a complete icon pack out.",
+      "Generate a complete favicon pack free — favicon.ico, SVG, maskable Android icons, Windows tiles, apple-touch-icon, manifest + the HTML snippet. No uploads.",
+    tagline: "One image in — a complete modern icon pack out.",
     category: "image",
     icon: "globe",
     keywords:
-      "favicon generator create favicon favicon ico apple touch icon site icon website icon favicon pack web app manifest pwa icons free favicon maker online generate favicon from image no sign up",
+      "favicon generator create favicon favicon ico apple touch icon site icon website icon favicon pack maskable icon favicon svg browserconfig mstile tile color web app manifest pwa icons free favicon maker online generate favicon from image no sign up",
     intro:
-      "Turn one image into every icon a modern website needs. Drop in a square logo (non-square images are centre-cropped automatically) and the generator produces a real multi-size favicon.ico with 16, 32 and 48 px entries, PNG icons for modern browsers, the 180 px apple-touch-icon for iOS home screens, 192 and 512 px Android icons, a site.webmanifest that ties them together, and a README with the exact HTML to paste into your <head>. Everything arrives as one zip, ready to drop into your site's root folder. The whole pack is generated in your browser — your logo never touches a server.",
+      "Turn one image into every icon a modern website needs. Drop in a square logo (non-square images are centre-cropped automatically) and the generator produces a real multi-size favicon.ico with 16, 32 and 48 px entries, PNG icons for modern browsers, the 180 px apple-touch-icon for iOS home screens, 192 and 512 px Android icons plus maskable variants that survive Android's icon cropping, an SVG favicon, a Windows tile with browserconfig.xml, a site.webmanifest with your brand colours, and a README with the exact HTML to paste into your <head>. Everything arrives as one zip, ready to drop into your site's root folder. The whole pack is generated in your browser — your logo never touches a server.",
     howTo: [
       "Drop your logo onto the page — square and at least 512 × 512 px gives the sharpest results.",
       "Optionally type your site name; it goes into the webmanifest.",
@@ -690,7 +699,11 @@ export const TOOLS: ToolDef[] = [
     faq: [
       {
         q: "What exactly is in the favicon pack?",
-        a: "A favicon.ico containing 16, 32 and 48 px icons in one file, six PNGs (16, 32, 48, 180, 192 and 512 px), a site.webmanifest linking the Android icons, and a README with step-by-step instructions and the HTML snippet.",
+        a: "A favicon.ico containing 16, 32 and 48 px icons in one file, ten PNGs (16, 32, 48, 96, 150, 180, 192 and 512 px plus two maskable variants), a favicon.svg, browserconfig.xml with a Windows tile image, a site.webmanifest with your brand colours and icon links, and a README with step-by-step instructions and the HTML snippet.",
+      },
+      {
+        q: "What is a maskable icon and why do I want one?",
+        a: "Android launches crop icons into circles, squircles and other shapes depending on the device. A maskable icon puts your logo in the middle of a solid-colour tile with a safe margin, so whatever shape the launcher crops it into, the artwork survives. Without one, Android zooms into your regular icon and can cut the edges off.",
       },
       {
         q: "Does my image need to be square?",
@@ -812,23 +825,31 @@ export const TOOLS: ToolDef[] = [
     id: "qr-generator",
     name: "QR Code Generator",
     short:
-      "Free online QR code generator for links, text and Wi-Fi. Download as PNG or SVG in print quality — no sign-up, no watermark, no expiry.",
-    tagline: "Turn any link or text into a scannable code.",
+      "Free online QR code generator for links, text, Wi-Fi, contact cards and e-mail. Add your logo, download as PNG or SVG in print quality — no sign-up, no watermark, no expiry.",
+    tagline: "Turn links, Wi-Fi, contacts or e-mail into a scannable code.",
     category: "prod",
     icon: "qr",
     keywords:
-      "qr code generator free qr code generator make a qr code create qr code online qr maker wifi qr code qr code for a link url qr code png svg download no watermark no sign up static qr code qr code for menu business card",
+      "qr code generator free qr code generator make a qr code create qr code online qr maker wifi qr code generator qr code for wifi password vcard qr code business card qr email qr code qr code with logo url qr code png svg download no watermark no sign up static qr code qr code for menu",
     intro:
-      "Create a free QR code in seconds. Type a link, plain text or Wi-Fi details, watch the QR code build itself live, and download it in print quality as a PNG or a scalable SVG. Everything is generated on your device — no sign-up, no watermark, and no expiry: these are static QR codes, so the data is encoded directly into the image and works forever, even offline.",
+      "Create a free QR code in seconds. Encode a link, plain text, a Wi-Fi network your guests can join with one scan, a contact card or an e-mail draft — add your own logo in the middle if you like — and watch the QR code build itself live. Download it in print quality as a PNG or a scalable SVG. Everything is generated on your device — no sign-up, no watermark, and no expiry: these are static QR codes, so the data is encoded directly into the image and works forever, even offline.",
     howTo: [
-      "Type or paste the link, text or Wi-Fi details you want to encode.",
-      "Pick a size and error-correction level, and set your colours — the preview updates as you go.",
+      "Pick the QR type — link or text, Wi-Fi, contact card or e-mail — and fill in the fields.",
+      "Optionally add a logo (error correction rises to High automatically so the code still scans), pick a size and set your colours — the preview updates as you go.",
       "Download your QR code as a PNG for quick use, or an SVG for perfect print quality at any size.",
     ],
     faq: [
       {
         q: "Is this QR code generator really free?",
         a: "Yes — unlimited codes, unlimited downloads, no account, no watermark. FreeSeak tools run in your browser, so generating a QR code costs nothing to serve.",
+      },
+      {
+        q: "What does a Wi-Fi QR code do when scanned?",
+        a: "The phone offers to join that network instantly — no reading the password out loud, no typing it character by character. It works with Android and iOS cameras, and guests love it on café tables, guest rooms and reception desks.",
+      },
+      {
+        q: "Can I put my logo inside the QR code?",
+        a: "Yes. Drop in a PNG or JPG and it is placed on a clean patch in the middle of the code. Error correction is raised to High automatically, so up to 30% of the code can be covered and it still scans — that is what the resilience rating is for. Keep the logo to roughly a quarter of the width; the preview shows exactly what scanners will see.",
       },
       {
         q: "Do the QR codes I create ever expire?",

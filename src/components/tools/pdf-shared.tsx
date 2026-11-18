@@ -9,7 +9,7 @@
  * every export is used by at least two tools).
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   CheckCircle2,
   ChevronDown,
@@ -443,10 +443,13 @@ export function PdfQueueList({
   items,
   onRemove,
   onMove,
+  detail,
 }: {
   items: QueueItem[];
   onRemove: (_id: number) => void;
   onMove: (_id: number, _dir: -1 | 1) => void;
+  /** optional per-row content rendered under the status line (merge: page ranges) */
+  detail?: (_item: QueueItem) => ReactNode;
 }) {
   return (
     <ul className="flex flex-col gap-2">
@@ -473,6 +476,7 @@ export function PdfQueueList({
                   ? "Reading…"
                   : `${item.pageCount} page${item.pageCount === 1 ? "" : "s"} · ${formatBytes(item.file.size)}`}
             </p>
+            {detail ? detail(item) : null}
           </div>
           {item.status === "loading" && (
             <Loader2 className="size-4 shrink-0 animate-spin text-primary" aria-hidden="true" />
