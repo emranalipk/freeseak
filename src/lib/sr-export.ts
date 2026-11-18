@@ -85,6 +85,17 @@ export const SR_PAPER_MM: Record<SrPaper, string> = {
   qf: "108mm 165mm",
 };
 
+/* v1.0.2: print always fills the REAL page. Chrome draws a smaller @page box
+   centered on the loaded paper instead of switching paper, so the sheet is
+   printed on one A4 page box (the user's actual paper) and zoomed up to fill
+   it — content stays edge-to-edge with the same 0.25 in margin on all four
+   sides. zoom = A4 printable width / sheet logical width. */
+export const SR_PRINT_ZOOM: Record<SrPaper, number> = {
+  a4: 1,
+  a5: PAPER.a4.sheetW / PAPER.a5.sheetW,
+  qf: PAPER.a4.sheetW / PAPER.qf.sheetW,
+};
+
 /* ---- date with weekday (v0.10.1 fix #2) --------------------------------- */
 export function formatSheetDate(lang: SrLang): string {
   const now = new Date();

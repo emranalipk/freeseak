@@ -62,7 +62,7 @@ import {
   buildPDFBlob,
   buildRows,
   buildSummaryText,
-  SR_PAPER_MM,
+  SR_PRINT_ZOOM,
   EMPTY_PROFILE,
   type SrProfile,
   type SrPaper,
@@ -453,11 +453,14 @@ export function PunjabRegistryEstimator() {
     doc.write(
       `<!doctype html><html><head><meta charset="utf-8"><style>` +
         `@font-face{font-family:'Jameel Noori Nastaleeq';src:url('${location.origin}/fonts/JameelNooriNastaleeq.woff2') format('woff2');font-display:block;}` +
-        /* v1.0.1: every size declares its paper and the exact 0.25 in margin;
-           rows never split across pages on any size */
-        `@page{size:${SR_PAPER_MM[paper]};margin:6.35mm;}tr{page-break-inside:avoid;}` +
+        /* v1.0.2: print always fills the printer's REAL page. Chrome draws a
+           smaller @page box centered on the loaded paper instead of switching
+           paper (that was the v1.0.1 bug), so we declare one A4 box — the
+           user's actual paper — and zoom the sheet up to fill it, keeping
+           the exact 0.25 in margin on all four sides */
+        `@page{size:210mm 297mm;margin:6.35mm;}tr{page-break-inside:avoid;}` +
         `html,body{margin:0;padding:0;background:#fff;}` +
-        `</style></head><body>${buildExportHTML(result, lang, profile, clientName, areaName, paper)}</body></html>`,
+        `</style></head><body><div style="zoom:${SR_PRINT_ZOOM[paper]};">${buildExportHTML(result, lang, profile, clientName, areaName, paper)}</div></body></html>`,
     );
     doc.close();
     const go = async () => {
