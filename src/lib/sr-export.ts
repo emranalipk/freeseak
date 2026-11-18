@@ -125,49 +125,56 @@ export interface SrRow {
   val: string;
   strong?: boolean;
   group?: "c32" | "fbr" | "oth";
+  num?: number; // v1.0.4: raw amount — rows with num === 0 are omitted everywhere
 }
 
 export function buildRows(res: SrRegistryResult, lang: SrLang): SrRow[] {
   const rows: SrRow[] = [];
-  rows.push({ lbl: t(lang, "stampDuty"), val: rs(res.stamp), group: "c32" });
-  rows.push({ lbl: t(lang, "committeeLabel"), val: rs(res.committee), group: "c32" });
-  rows.push({ lbl: t(lang, "plraLabel"), val: rs(res.plra), group: "c32" });
-  rows.push({ lbl: t(lang, "borFeeLabel"), val: rs(res.borFee), group: "c32" });
-  rows.push({ lbl: t(lang, "mutationFeeLabel"), val: rs(res.mutFee), group: "c32" });
-  rows.push({ lbl: t(lang, "plraMutLabel"), val: rs(res.plraMut), group: "c32" });
-  rows.push({ lbl: t(lang, "challan32ATotal"), val: rs(res.c32Tot), strong: true, group: "c32" });
+  rows.push({ lbl: t(lang, "stampDuty"), val: rs(res.stamp), num: res.stamp, group: "c32" });
+  rows.push({ lbl: t(lang, "committeeLabel"), val: rs(res.committee), num: res.committee, group: "c32" });
+  rows.push({ lbl: t(lang, "plraLabel"), val: rs(res.plra), num: res.plra, group: "c32" });
+  rows.push({ lbl: t(lang, "borFeeLabel"), val: rs(res.borFee), num: res.borFee, group: "c32" });
+  rows.push({ lbl: t(lang, "mutationFeeLabel"), val: rs(res.mutFee), num: res.mutFee, group: "c32" });
+  rows.push({ lbl: t(lang, "plraMutLabel"), val: rs(res.plraMut), num: res.plraMut, group: "c32" });
+  rows.push({ lbl: t(lang, "challan32ATotal"), val: rs(res.c32Tot), num: res.c32Tot, strong: true, group: "c32" });
 
   if (res.btDet.length > 1) {
     for (const d of res.btDet) {
       rows.push({
         lbl: `${t(lang, "buyerTaxDetail")} — ${d.name || t(lang, "buyers")} (${d.share}%, ${d.status === "filer" ? t(lang, "filerS") : t(lang, "nonS")})`,
         val: rs(d.tax),
+        num: d.tax,
         group: "fbr",
       });
     }
   } else {
-    rows.push({ lbl: t(lang, "buyerTaxDetail"), val: rs(res.btTot), group: "fbr" });
+    rows.push({ lbl: t(lang, "buyerTaxDetail"), val: rs(res.btTot), num: res.btTot, group: "fbr" });
   }
   if (res.stDet.length > 1) {
     for (const d of res.stDet) {
       rows.push({
         lbl: `${t(lang, "sellerTaxDetail")} — ${d.name || t(lang, "sellers")} (${d.share}%, ${d.status === "filer" ? t(lang, "filerS") : t(lang, "nonS")})`,
         val: rs(d.tax),
+        num: d.tax,
         group: "fbr",
       });
     }
   } else {
-    rows.push({ lbl: t(lang, "sellerTaxDetail"), val: rs(res.stTot), group: "fbr" });
+    rows.push({ lbl: t(lang, "sellerTaxDetail"), val: rs(res.stTot), num: res.stTot, group: "fbr" });
   }
-  rows.push({ lbl: t(lang, "fbrTotal"), val: rs(res.fbrTot), strong: true, group: "fbr" });
+  rows.push({ lbl: t(lang, "fbrTotal"), val: rs(res.fbrTot), num: res.fbrTot, strong: true, group: "fbr" });
 
-  rows.push({ lbl: t(lang, "regFee"), val: rs(res.oth.reg), group: "oth" });
-  rows.push({ lbl: t(lang, "fardMoqa"), val: rs(res.oth.fard), group: "oth" });
-  rows.push({ lbl: t(lang, "photoCopy"), val: rs(res.oth.photo), group: "oth" });
-  rows.push({ lbl: t(lang, "misc"), val: rs(res.oth.misc), group: "oth" });
-  rows.push({ lbl: t(lang, "stampVendor"), val: rs(res.oth.stampVendor), group: "oth" });
+  rows.push({ lbl: t(lang, "regFee"), val: rs(res.oth.reg), num: res.oth.reg, group: "oth" });
+  rows.push({ lbl: t(lang, "fardMoqa"), val: rs(res.oth.fard), num: res.oth.fard, group: "oth" });
+  rows.push({ lbl: t(lang, "photoCopy"), val: rs(res.oth.photo), num: res.oth.photo, group: "oth" });
+  rows.push({ lbl: t(lang, "misc"), val: rs(res.oth.misc), num: res.oth.misc, group: "oth" });
+  rows.push({ lbl: t(lang, "stampVendor"), val: rs(res.oth.stampVendor), num: res.oth.stampVendor, group: "oth" });
 
-  return rows;
+  /* v1.0.4: a charge that computes to Rs 0 is not an expense — omit the row
+     everywhere (on-screen card, PDF, JPG, print sheet, WhatsApp, clipboard).
+     Subtotals follow their group: an FBR total of 0 disappears with its
+     rows; the 32-A total is always > 0 (stamp duty cannot be zero). */
+  return rows.filter((r) => r.num === undefined || r.num > 0);
 }
 
 function esc(s: string): string {
@@ -432,7 +439,10 @@ export async function drawSheet(
   const stripM = slim ? 0 : th.stripH + m3(8, 12, 16);
 
   let H = topPad + headerM + dateM + clientM + gapM + stripM;
-  for (const g of groups) H += th.secH + byGroup(g).length * th.rowH;
+  for (const g of groups) {
+    const n = byGroup(g).length;
+    if (n) H += th.secH + n * th.rowH; // v1.0.4: all-zero groups take no height
+  }
   if (foot) H += m3(8, 12, 14) + m3(ur ? 40 : 34, ur ? 52 : 44, ur ? 62 : 52);
   if (foot && res.fbrTot > 0 && !res.allOff) H += m3(16, 22, 26);
   if (foot && res.filerSaving > 0)
@@ -579,6 +589,7 @@ export async function drawSheet(
 
   /* --- sections --- */
   const section = (title: string, list: SrRow[]) => {
+    if (!list.length) return; // v1.0.4: no orphan title when every row is zero
     tx(title, ur ? xR : xL, y + m3(11, 14, 16), th.section, NAVY, "bold", ur ? "right" : "left");
     ctx.strokeStyle = BORDER;
     ctx.lineWidth = 1;
@@ -988,15 +999,19 @@ export function buildExportHTML(
       `</div>`;
   }
 
-  const section = (title: string, bodyRows: SrRow[]) =>
-    `<tr><td colspan="2" style="padding:${T.secTop}px 0 ${T.secBot}px;font-size:${T.fSec}px;font-weight:${bw(title, 800)};color:${NAVY};border-bottom:1px solid ${BORDER};">${esc(title)}</td></tr>` +
-    bodyRows
-      .map(
-        (r) =>
-          `<tr><td style="padding:${T.rowPad}px 0;font-size:${T.fRow}px;color:${INK};${r.strong ? `font-weight:${bw(r.lbl, 700)};` : ""}">${esc(r.lbl)}</td>` +
-          `<td style="padding:${T.rowPad}px 0;font-size:${T.fRow}px;text-align:${ur ? "left" : "right"};font-weight:700;color:${r.strong ? NAVY : INK};white-space:nowrap;">${esc(r.val)}</td></tr>`,
-      )
-      .join("");
+  const section = (title: string, bodyRows: SrRow[]) => {
+    if (!bodyRows.length) return ""; // v1.0.4: all-zero section omitted from print
+    return (
+      `<tr><td colspan="2" style="padding:${T.secTop}px 0 ${T.secBot}px;font-size:${T.fSec}px;font-weight:${bw(title, 800)};color:${NAVY};border-bottom:1px solid ${BORDER};">${esc(title)}</td></tr>` +
+      bodyRows
+        .map(
+          (r) =>
+            `<tr><td style="padding:${T.rowPad}px 0;font-size:${T.fRow}px;color:${INK};${r.strong ? `font-weight:${bw(r.lbl, 700)};` : ""}">${esc(r.lbl)}</td>` +
+            `<td style="padding:${T.rowPad}px 0;font-size:${T.fRow}px;text-align:${ur ? "left" : "right"};font-weight:700;color:${r.strong ? NAVY : INK};white-space:nowrap;">${esc(r.val)}</td></tr>`,
+        )
+        .join("")
+    );
+  };
 
   const valueStrip =
     `<table style="width:100%;border-collapse:collapse;margin:${T.stripMt};">` +

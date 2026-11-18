@@ -625,6 +625,18 @@ export function PunjabRegistryEstimator() {
 
   const rows = result ? buildRows(result, lang) : [];
 
+  /* v1.0.4: the on-screen "Other" section hides charges left at 0 — matches
+     buildRows, which already omits them from every export surface. */
+  const othRows = (
+    [
+      [t("regFee"), result?.oth.reg ?? 0],
+      [t("fardMoqa"), result?.oth.fard ?? 0],
+      [t("photoCopy"), result?.oth.photo ?? 0],
+      [t("misc"), result?.oth.misc ?? 0],
+      [t("stampVendor"), result?.oth.stampVendor ?? 0],
+    ] as const
+  ).filter(([, val]) => val > 0);
+
   return (
     <div
       dir={ur ? "rtl" : "ltr"}
@@ -909,7 +921,9 @@ export function PunjabRegistryEstimator() {
               { key: "c32", title: t("challan32A") },
               { key: "fbr", title: t("fbrSection") },
             ] as const
-          ).map((g) => (
+          )
+            .filter((g) => rows.some((r) => r.group === g.key)) /* v1.0.4: hide an all-zero group (e.g. FBR when nothing is payable) */
+            .map((g) => (
             <div key={g.key} className="mt-3">
               <p data-sr-title className="border-b border-border pb-1.5 text-[12px] font-extrabold text-navy dark:text-mint">
                 {g.title}
@@ -933,25 +947,19 @@ export function PunjabRegistryEstimator() {
                 ))}
             </div>
           ))}
-          <div className="mt-3">
-            <p className="border-b border-border pb-1.5 text-[12px] font-extrabold text-navy dark:text-mint">
-              {t("otherSection")}
-            </p>
-            {(
-              [
-                [t("regFee"), result.oth.reg],
-                [t("fardMoqa"), result.oth.fard],
-                [t("photoCopy"), result.oth.photo],
-                [t("misc"), result.oth.misc],
-                [t("stampVendor"), result.oth.stampVendor],
-              ] as const
-            ).map(([lbl, val]) => (
-              <div key={lbl} className="flex items-center justify-between gap-3 py-1.5">
-                <span className="text-[12.5px] text-muted-foreground">{lbl}</span>
-                <span className="whitespace-nowrap text-[12.5px] font-bold text-foreground/90">{fmtRs(val)}</span>
-              </div>
-            ))}
-          </div>
+          {othRows.length > 0 ? (
+            <div className="mt-3">
+              <p className="border-b border-border pb-1.5 text-[12px] font-extrabold text-navy dark:text-mint">
+                {t("otherSection")}
+              </p>
+              {othRows.map(([lbl, val]) => (
+                <div key={lbl} className="flex items-center justify-between gap-3 py-1.5">
+                  <span className="text-[12.5px] text-muted-foreground">{lbl}</span>
+                  <span className="whitespace-nowrap text-[12.5px] font-bold text-foreground/90">{fmtRs(val)}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           {/* grand total */}
           <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-navy px-4 py-3 dark:bg-[#22477F]">
