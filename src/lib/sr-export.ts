@@ -78,12 +78,11 @@ const PAPER: Record<SrPaper, { sheetW: number; pdfW: number; pdfH: number; pdfM:
   qf: { sheetW: 360, pdfW: 306.14, pdfH: 467.72, pdfM: 18 },
 };
 
-/* physical paper size per choice, for the print iframe's @page rule */
-export const SR_PAPER_MM: Record<SrPaper, string> = {
-  a4: "210mm 297mm",
-  a5: "148mm 210mm",
-  qf: "108mm 165mm",
-};
+/* v1.0.3 — the old SR_PAPER_MM table (physical paper sizes for the print
+   @page rule) is deleted: the v1.0.2 print fix prints every sheet on one A4
+   page box, so per-paper size strings are no longer used anywhere
+   (Rule 1 — dead code is deleted, not parked). SR_PRINT_ZOOM below is the
+   surviving print constant. */
 
 /* v1.0.2: print always fills the REAL page. Chrome draws a smaller @page box
    centered on the loaded paper instead of switching paper, so the sheet is

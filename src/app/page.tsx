@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { HomePage } from "@/components/site/home-page";
-import { HOME_FAQ } from "@/components/site/faq";
 import { OPERATOR_NAME, SITE_NAME, SITE_URL } from "@/lib/site";
 
 /* v0.4: the homepage targets the head keyword directly. No SearchAction
@@ -39,17 +38,11 @@ const siteJsonLd = {
   ],
 };
 
-/* v1.0.0: the homepage FAQ gets its own FAQPage markup — the accordion is
-   prerendered server-side, so the JSON-LD matches what crawlers see. */
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: HOME_FAQ.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
+/* v1.0.3: the FAQPage JSON-LD was removed — Google deprecated FAQ rich
+   results on 2026-05-07 (developers.google.com/search/updates) and the SEO
+   brief forbids FAQPage markup project-wide. The visible FAQ accordion
+   (rendered in HomePage from components/site/faq.tsx) stays: the answers
+   remain fully crawlable as ordinary HTML, which is what still counts. */
 
 export default function Page() {
   return (
@@ -58,10 +51,6 @@ export default function Page() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
     </>
   );

@@ -16,6 +16,7 @@ const GROUPS: CategoryId[] = ["pdf", "image", "calc", "prod"];
 const PAGES = [
   { href: "/about", label: "About" },
   { href: "/guides", label: "Guides" },
+  { href: "/punjab-registry-costs", label: "Punjab Registry Costs" },
   { href: "/privacy-policy", label: "Privacy Policy" },
   { href: "/terms", label: "Terms" },
   { href: "/disclaimer", label: "Disclaimer" },

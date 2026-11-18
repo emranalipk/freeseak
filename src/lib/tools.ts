@@ -813,7 +813,7 @@ export const TOOLS: ToolDef[] = [
       },
       {
         q: "Are the estimates exact?",
-        a: "They are careful estimates based on the rates shown next to every result (currently effective July 2026), not a substitute for the sub-registrar's office. Actual challans can differ with district council variations, DC-rate assessments and rounding at the counter — always confirm the final figures with your sub-registrar or PLRA office before transacting.",
+        a: "They are careful estimates based on the rates shown next to every result (the effective date is always printed there, so it can never go stale), not a substitute for the sub-registrar's office. Actual challans can differ with district council variations, DC-rate assessments and rounding at the counter — always confirm the final figures with your sub-registrar or PLRA office before transacting.",
       },
       {
         q: "Does the calculator work in Urdu?",

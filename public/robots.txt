@@ -1,5 +1,0 @@
-# FreeSeak — invite search engines in, show them the map
-User-agent: *
-Allow: /
-
-Sitemap: https://freeseak.com/sitemap.xml

@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { CommandPalette } from "@/components/site/command-palette";
-import { CF_ANALYTICS_TOKEN, SITE_NAME, SITE_URL } from "@/lib/site";
+import { CF_ANALYTICS_TOKEN, IS_PREVIEW, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,19 +30,11 @@ export const metadata: Metadata = {
   },
   description:
     "Free, privacy-first tools that run entirely in your browser. Compress images, generate QR codes, and more — no files uploaded, no account needed. Built by Bluefrog.",
-  /* v0.4: keywords list only LIVE tools — never advertise tools that
-     do not exist */
-  keywords: [
-    "free online tools",
-    "qr code generator",
-    "word counter",
-    "percentage calculator",
-    "age calculator",
-    "compress image",
-    "image compressor",
-    "resize image",
-    "no sign up tools",
-  ],
+  /* v1.0.3: preview builds (workers.dev / localhost) are noindexed from the
+     layout down — launch day flips SITE_MODE=production and this disappears
+     (docs/LAUNCH_CHECKLIST.md). The meta-keywords tag was removed: no search
+     engine has read it in years. */
+  robots: IS_PREVIEW ? { index: false, follow: false } : undefined,
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

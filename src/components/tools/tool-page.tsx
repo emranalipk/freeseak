@@ -49,21 +49,12 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
     ),
   ].slice(0, 3);
 
-  /* structured data for Google (v0.3: FAQ + WebApplication + Breadcrumb):
-     all of it is generated from the catalogue — the single source of truth */
-  const faqJsonLd =
-    tool.faq && tool.faq.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: tool.faq.map((f) => ({
-            "@type": "Question",
-            name: f.q,
-            acceptedAnswer: { "@type": "Answer", text: f.a },
-          })),
-        }
-      : null;
-
+  /* structured data for Google (v0.3: WebApplication + Breadcrumb): all of
+     it is generated from the catalogue — the single source of truth.
+     v1.0.3: the FAQPage node is gone — Google deprecated FAQ rich results
+     on 2026-05-07 (developers.google.com/search/updates) and the SEO brief
+     forbids FAQPage markup project-wide; the visible catalogue FAQs stay
+     as ordinary HTML, which crawlers still read. */
   const webAppJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -263,7 +254,7 @@ export function ToolPage({ tool }: { tool: ToolDef }) {
       </div>
       </div>
 
-      {[faqJsonLd, webAppJsonLd, breadcrumbJsonLd].map((ld, i) =>
+      {[webAppJsonLd, breadcrumbJsonLd].map((ld, i) =>
         ld ? (
           <script
             key={i}
